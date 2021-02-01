@@ -26,15 +26,15 @@ sudo xhost +si:localuser:root
 
 echo "Starting Container: ${CONTAINER_NAME} with REPO: $DOCKER_REPO"
  
-if [ "$(sudo docker ps -aq -f name=${CONTAINER_NAME})" ]; then
-    if [ "$(sudo docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
+if [ "$(docker ps -aq -f name=${CONTAINER_NAME})" ]; then
+    if [ "$(docker ps -aq -f status=exited -f name=${CONTAINER_NAME})" ]; then
         # cleanup
-        sudo docker start ${CONTAINER_NAME}
+        docker start ${CONTAINER_NAME}
     fi
     if [ -z "$CMD" ]; then
-        sudo docker exec -it --user $USER_NAME ${CONTAINER_NAME} bash
+        docker exec -it --user $USER_NAME ${CONTAINER_NAME} bash
     else
-        sudo docker exec -it --user $USER_NAME ${CONTAINER_NAME} bash -c "$CMD"
+        docker exec -it --user $USER_NAME ${CONTAINER_NAME} bash -c "$CMD"
     fi
 else
 
@@ -42,11 +42,15 @@ else
 #     -v /tmp/.X11-unix/:/tmp/.X11-unix \
 #     $USER_VOLUME $CONTAINER_IMAGE $USER_COMMAND
 
-sudo docker run --runtime nvidia -it --network host -e DISPLAY=$DISPLAY \
+docker run --runtime nvidia -it --network host -e DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
+    --group-add=dialout \
+    --group-add=tty \
+    --tty=true \
+    --device=/dev/ttyTHS1 \
     --volume="$WORKSPACE_DIR:/home/$USER_NAME/shared_volume:rw" \
     --workdir="/home/$USER_NAME" \
     --name=${CONTAINER_NAME} \
-    --privileged \
+    --privileged=true \
     $DOCKER_REPO
 fi
