@@ -18,6 +18,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         git \
+		gedit \
 		cmake \
 		build-essential \
 		curl \
@@ -35,12 +36,31 @@ RUN apt-get update && \
 		ros-melodic-ros-base \
 		ros-melodic-image-transport \
 		ros-melodic-vision-msgs \
-          python-rosdep \
-          python-rosinstall \
-          python-rosinstall-generator \
-          python-wstool \
+        python-rosdep \
+        python-rosinstall \
+        python-rosinstall-generator \
+        python-wstool \
+        python-catkin-tools \
+        python-rosinstall-generator \
     && rm -rf /var/lib/apt/lists/*
+RUN apt-get install  -y
 
+
+# Add MAVLink and mavros
+RUN apt-get update && apt-get -y --quiet --no-install-recommends install \
+		geographiclib-tools \
+		libeigen3-dev \
+		libgeographic-dev \
+		libyaml-cpp-dev \
+		python-pip \
+		python-tk \
+		ros-$ROS_DISTRO-mav-msgs \
+		ros-$ROS_DISTRO-mavlink \
+		ros-$ROS_DISTRO-mavros \
+		ros-$ROS_DISTRO-mavros-extras \
+	&& geographiclib-get-geoids egm96-5 \
+	&& apt-get -y autoremove \
+	&& apt-get clean autoclean 
 
 # Add riot user
 RUN useradd --shell /bin/bash -u 1000 -c "" -m $CONTAINER_USER && usermod -a -G dialout $CONTAINER_USER && echo "$CONTAINER_USER:$CONTAINER_USER" | chpasswd && adduser $CONTAINER_USER sudo
@@ -50,16 +70,27 @@ RUN echo "source /opt/ros/melodic/setup.bash" >> /home/$CONTAINER_USER/.bashrc
 RUN rosdep init && su -c "rosdep update -c /home/$CONTAINER_USER/.ros/rosdep/sources.cache" - $CONTAINER_USER
 RUN echo "source /opt/ros/melodic/setup.bash" >> /home/$CONTAINER_USER/.bashrc
 
+# Add user to dialout group
+RUN usermod -aG dialout $CONTAINER_USER
+RUN usermod -aG tty $CONTAINER_USER
 
-# init/update rosdep
-# RUN apt-get update && \
-#     cd ${ROS_ROOT} && \
-#     rosdep init && \
-#     rosdep update
-#   sudo rm -rf /var/lib/apt/lists/*
-
+# Switch user
 USER $CONTAINER_USER
-# setup entrypoint
+
+# Create src folder inside the HOME folder
+# This is to host non-ROS packages to install from source
+RUN cd /home/$CONTAINER_USER && mkdir src
+
+# Create ROS catkin_ws to host ROS packages
+RUN mkdir -p /home/$CONTAINER_USER/catkin_ws/src \
+    && cd /home/$CONTAINER_USER/catkin_ws \
+    && catkin init \
+    && catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release \
+    && catkin config --merge-devel \
+    && catkin config --extend /opt/ros/$ROS_DISTRO \
+    && catkin build
+
+# Setup entrypoint
 COPY ./packages/ros_entrypoint.sh /ros_entrypoint.sh
 ENTRYPOINT ["/ros_entrypoint.sh"]
 CMD ["bash"]
