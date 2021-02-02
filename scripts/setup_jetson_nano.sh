@@ -11,7 +11,17 @@ sudo gpasswd -a $(whoami) docker
 echo " " && echo "Serial ports configuration (ttyTHS1) ..." && echo " "
 sudo usermod -aG dialout $(whoami)
 sudo usermod -aG tty $(whoami)
-sudo chmod 666 /dev/ttyTHS1
+
+echo " " && echo "Adding udev rules for /dev/ttyTHS* ..." && echo " " && sleep 1
+echo 'KERNEL=="ttyTHS*", MODE="0666"' | sudo tee /etc/udev/rules.d/55-tegraserial.rules
+# nvgetty needs to be disabled in order to set ppermanent permissions for ttyTHS1 on jetson nano
+# see (https://forums.developer.nvidia.com/t/read-write-permission-ttyths1/81623/5)
+
+echo " " && echo "Disabling nvgetty ..." && echo " " && sleep 1
+sudo systemctl stop nvgetty
+sudo systemctl disable nvgetty
+sudo udevadm trigger
+
 
 # clone jetson-containers repo
 if [ ! -d "${HOME}/src" ]; then
