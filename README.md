@@ -1,5 +1,5 @@
 # Extended Setup for PX4 Integration
-This section is added to provide instructions regarding the extra steps required to setup docker images on Jetson Nano that can work with PX4 autopilot hardwre e.g. Pixhawk.
+This section is added to provide instructions regarding the extra steps required to setup docker images on Jetson Nano that can work with PX4 autopilot hardware e.g. Pixhawk.
 
 ## Added files
 * `Dockerfile.ros.melodic.px4`: Adds MAVROS and some extra confgiurations to prepare the docker image to work with PX4-supported autopilot hardware
@@ -16,7 +16,7 @@ This section is added to provide instructions regarding the extra steps required
 ## Communication with PX4
 The docker container has MAVROS package which can be used to communicate with PX4 as follows
 * Connect the serial port `/dev/ttyTHS1` (pins 6-GND, 8-TX, 10-RX), [reference](https://www.jetsonhacks.com/nvidia-jetson-nano-j41-header-pinout/), to Pixhawk serial port, usually `TELEM2`
-* Configure the serial port on Pixhawk to, [reference](https://docs.px4.io/master/en/companion_computer/pixhawk_companion.html#pixhawk-setup). Use Baud rate of `500000` as `921600` baudrate is not supported in the default Jetson kernel
+* Configure the serial port on Pixhawk, [reference](https://docs.px4.io/master/en/companion_computer/pixhawk_companion.html#pixhawk-setup). Use Baud rate of `500000` as `921600` baudrate is not supported in the default Jetson kernel
 * In the docker container terminal, launch a MAVROS node to establish the communication
     ```bash
     roslaunch mavros px4.launch fcu_url:=/dev/ttyTHS1:500000
