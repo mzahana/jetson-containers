@@ -12,6 +12,7 @@ This section is added to provide instructions regarding the extra steps required
 * execute the setup script, `./setup_jetson_nano.sh`
 * Reboot your Jetson after the setup is completed
 * The setup script creates an alias in the `$HOME/.bashrc` file. The alias is named `px4_container`. You can execute this alias in a terminal and you will be logged into the container with username (and password) `riot`.
+* Setup instruction for **Jetson Nano 4G shield** can be found [here ](https://github.com/phillipdavidstearns/simcom_wwan-setup)
 
 ## Communication with PX4
 The docker container has MAVROS package which can be used to communicate with PX4 as follows
