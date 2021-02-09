@@ -25,6 +25,8 @@ RUN apt-get update && \
 		wget \
 		gnupg2 \
 		lsb-release \
+		net-tools \
+		iputils-ping \
     &&  rm -rf /var/lib/apt/lists/*
 
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -43,8 +45,7 @@ RUN apt-get update && \
         python-catkin-tools \
         python-rosinstall-generator \
     && rm -rf /var/lib/apt/lists/*
-RUN apt-get install  -y
-
+RUN apt-get install -y --no-install-recommends \
 
 # Add MAVLink and mavros
 RUN apt-get update && apt-get -y --quiet --no-install-recommends install \
