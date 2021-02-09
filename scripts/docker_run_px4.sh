@@ -43,6 +43,7 @@ else
 #     $USER_VOLUME $CONTAINER_IMAGE $USER_COMMAND
 
 docker run --runtime nvidia -it --network host -e DISPLAY=$DISPLAY \
+    --user=$USER_NAME \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
     --group-add=dialout \
     --group-add=tty \
