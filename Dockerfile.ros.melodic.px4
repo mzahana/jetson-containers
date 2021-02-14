@@ -28,6 +28,8 @@ RUN apt-get update && \
 		net-tools \
 		iputils-ping \
 		nano \
+		bash-completion \
+		python3-pip \
     &&  rm -rf /var/lib/apt/lists/*
 
 RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
@@ -91,6 +93,16 @@ RUN mkdir -p /home/$CONTAINER_USER/catkin_ws/src \
     && catkin config --merge-devel \
     && catkin config --extend /opt/ros/$ROS_DISTRO \
     && catkin build
+
+RUN echo "source /etc/profile.d/bash_completion.sh" >> /home/$CONTAINER_USER/.bashrc
+
+# Install VS code
+# If you need a specific version of Visual Studio Code, set the version here, e.g.
+# VERSION=1.51.1
+# latest gets the latest stable version
+ENV VS_VERSION=latest
+RUN cd /home/$CONTAINER_USER/src && wget -N -O vscode-linux-deb.arm64.deb https://update.code.visualstudio.com/$VS_VERSION/linux-deb-arm64/stable && \
+	echo $CONTAINER_USER | sudo -S apt-get install -y --quiet --no-install-recommends ./vscode-linux-deb.arm64.deb
 
 # Setup entrypoint
 COPY ./packages/ros_entrypoint.sh /ros_entrypoint.sh

@@ -13,6 +13,8 @@ This section is added to provide instructions regarding the extra steps required
 * Reboot your Jetson after the setup is completed
 * The setup script creates an alias in the `$HOME/.bashrc` file. The alias is named `px4_container`. You can execute this alias in a terminal and you will be logged into the container with username (and password) `riot`.
 * Setup instruction for **Jetson Nano 4G shield** can be found [here ](https://github.com/phillipdavidstearns/simcom_wwan-setup)
+    * Follow the instructions in the above page to setup the 4G shield
+    * Before executing `sudo dhclient -1 -v wwan0` to allocate an IP, you may need to set the APN as described in [this issue](https://github.com/phillipdavidstearns/simcom_wwan-setup/issues/1). Basically, you will need to send the AT command `AT+CGDCONT=1,"IP","inet.bell.ca"`. `inet.bell.ca` is the APN. Make sure that you find the right APN for your 4G service provider.
 
 ## Communication with PX4
 The docker container has MAVROS package which can be used to communicate with PX4 as follows
