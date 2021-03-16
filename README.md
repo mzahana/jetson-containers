@@ -5,11 +5,20 @@ This section is added to provide instructions regarding the extra steps required
 * `Dockerfile.ros.melodic.px4`: Adds MAVROS and some extra confgiurations to prepare the docker image to work with PX4-supported autopilot hardware
 * `scripts/docker_build_ros_px4.sh`: Builds `Dockerfile.ros.melodic.px4`
 * `scripts/docker_run_px4.sh` provides a convenience script to run docker containers from `Dockerfile.ros.melodic.px4`
-* `scripts/setup_jetson_nano.sh`: A convenience script to install everything on a jetson nano.
+* `scripts/setup_jetson.sh`: A convenience script to install everything on a jetson nano.
+* `scripts/installRealsenseUdev.md` Installs the required udev rules for Intel D435 depth cameras. **This is required before using te camera inside a docker container**.
 
 ## Setup instructions
-* Copy the content of the `scripts/setup_jetson_nano.sh` to your Jetson Nano, in a file, for example in the home directory. Make the file executable, `chmod +x setup_jetson_nano.sh`
-* execute the setup script, `./setup_jetson_nano.sh`
+* Clone this package to your `~/src/` folder
+    ```bash
+    cd ~/src
+    git clone https://github.com/mzahana/jetson-containers.git
+    ```
+* Execute the setup script, `./setup_jetson.sh`
+```bash
+cd ~/src/jetson-containers/scripts/
+./setup_jetson.sh
+```
 * Reboot your Jetson after the setup is completed
 * The setup script creates an alias in the `$HOME/.bashrc` file. The alias is named `px4_container`. You can execute this alias in a terminal and you will be logged into the container with username (and password) `riot`.
 * Setup instruction for **Jetson Nano 4G shield** can be found [here ](https://github.com/phillipdavidstearns/simcom_wwan-setup)
@@ -19,7 +28,7 @@ This section is added to provide instructions regarding the extra steps required
 ## Communication with PX4
 The docker container has MAVROS package which can be used to communicate with PX4 as follows
 * Connect the serial port `/dev/ttyTHS1` (pins 6-GND, 8-TX, 10-RX), [reference](https://www.jetsonhacks.com/nvidia-jetson-nano-j41-header-pinout/), to Pixhawk serial port, usually `TELEM2`
-* Configure the serial port on Pixhawk, [reference](https://docs.px4.io/master/en/companion_computer/pixhawk_companion.html#pixhawk-setup). Use Baud rate of `500000` as `921600` baudrate is not supported in the default Jetson kernel
+* Configure the serial port on Pixhawk, [reference](https://docs.px4.io/master/en/companion_computer/pixhawk_companion.html#pixhawk-setup). Use Baud rate of `500000` as `921600` baudrate is not supported in the default Jetson kernel. **On Xavier NX, you can use 921600 baudrate**
 * In the docker container terminal, launch a MAVROS node to establish the communication
     ```bash
     roslaunch mavros px4.launch fcu_url:=/dev/ttyTHS1:500000
