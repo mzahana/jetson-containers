@@ -23,7 +23,6 @@ echo "Container name:$CONTAINER_NAME WORSPACE DIR:$WORKSPACE_DIR"
 #echo "USER_COMMAND:    '$USER_COMMAND'"
 
 # run the container
-
 xhost +si:localuser:root
 
 echo "Starting Container: ${CONTAINER_NAME} with REPO: $DOCKER_REPO"
@@ -43,17 +42,18 @@ else
 # sudo docker run --runtime nvidia -it --rm --network host -e DISPLAY=$DISPLAY \
 #     -v /tmp/.X11-unix/:/tmp/.X11-unix \
 #     $USER_VOLUME $CONTAINER_IMAGE $USER_COMMAND
-
-docker run --runtime nvidia -it --network host -e DISPLAY=$DISPLAY \
+CMD="source /home/riot/.bashrc && roslaunch mavros px4.launch fcu_url:=/dev/ttyUSB0:921600 gcs_url:=udp://@10.147.20.73"
+sudo docker run --runtime nvidia -it --network host -e DISPLAY=$DISPLAY --restart always \
     --user=${CONTAINER_USER_NAME} \
     -v /tmp/.X11-unix/:/tmp/.X11-unix \
+    -v /dev:/dev \
     --group-add=dialout \
     --group-add=tty \
     --tty=true \
-    --device=/dev/ttyTHS1 \
+    --device=/dev/ttyUSB0 \
     -v ${WORKSPACE_DIR}:/home/${CONTAINER_USER_NAME}/shared_volume \
     --workdir="/home/${CONTAINER_USER_NAME}" \
     --name=${CONTAINER_NAME} \
-    --privileged=true \
+    --privileged \
     ${DOCKER_REPO}
 fi
