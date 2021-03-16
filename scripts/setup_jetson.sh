@@ -23,24 +23,11 @@ sudo systemctl disable nvgetty
 sudo udevadm trigger
 
 
-# clone jetson-containers repo
-if [ ! -d "${HOME}/src" ]; then
-    echo " " && echo "Creating src folder in HOME..." && echo " " && sleep 1
-    cd ${HOME}
-fi
+echo && echo "Install udev rules for Realsense D435..."
+cd $HOME/src/jetson-containers/scripts
+./installRealsenseUdev.sh
 
-if [ ! -d "${HOME}/src/jetson-containers" ]; then
-    echo " " && echo "Cloning jetson-containers ..." && echo " " && sleep 1
-    cd ${HOME}/src
-    git clone https://github.com/mzahana/jetson-containers.git
-else
-    echo " " && echo "jetson-containers alredy exist in $HOME/src . Pulling latest from Github repo..." && echo " " && sleep 1
-    cd ${HOME}/src/jetson-containers
-    git pull
-fi
-
-cd $HOME/src/jetson-containers
-
+cd $HOME/src/jetson-containers/
 echo " " && echo "Building $HOME/src/jetson-containers/Dockerfile.ros.melodic.px4 ..." && echo " " && sleep 1
 ./scripts/docker_build_ros_px4.sh
 
