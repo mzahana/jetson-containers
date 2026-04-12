@@ -1,6 +1,6 @@
 #---
 # name: gps-denied-nav
-# depends: [opencv, cudastack, pytorch, onnxruntime]
+# depends: [opencv, cudastack, torchvision, onnxruntime]
 # requires: '>=36'
 # config: config.py
 #---
