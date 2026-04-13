@@ -21,22 +21,26 @@ This will chain the necessary dependencies (OpenCV, CUDA, ROS2, etc.) and produc
 
 The package includes a custom run configuration that sets up persistent shared volumes and hardware access.
 
-### 1. Launch the Container
-Run the following command to start the container:
+### 1. Launch or Re-enter the Container
+Run the following command to start a new container or get back into an existing one:
 
 ```bash
 jetson-containers run gps-denied-nav
 ```
 
 **What this does:**
-- Finds the most recent `gps-denied-nav` image.
+- **First time**: Creates a new container with persistent shared volumes and hardware access.
+- **Subsequent times**: If the container is stopped, it restarts it. If it is already running, it attaches a new terminal.
+- **Unified Workflow**: You only ever need this one command to manage your development environment.
+
+**Configuration features:**
 - Mounts a shared volume at `~/gps-denied-nav_shared_volume` on your host to `/root/shared_volume` in the container.
 - Sets the container name to `gps-denied-nav`.
 - Enables `--privileged` mode and `--network host`.
 - Sourcing of ROS2 and environment variables (`RMW_IMPLEMENTATION`) is handled automatically.
 
-### 2. Re-entering the Container
-Since the container is launched with `--no-rm`, it will persist after you exit. To open a new terminal in the running container, use:
+### 2. Manual Re-entry (Optional)
+If you specifically want to open an additional parallel terminal in the running container, you can still use:
 
 ```bash
 docker exec -it gps-denied-nav bash
