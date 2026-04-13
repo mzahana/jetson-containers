@@ -109,21 +109,21 @@ RUN  apt update && \
         libgeographic-dev \
 		libasio-dev \
 		libgoogle-glog-dev \
-		ros-humble-eigen-stl-containers \
-		ros-humble-diagnostic-updater \
-		ros-humble-geographic-msgs \
+		ros-${ROS_DISTRO}-eigen-stl-containers \
+		ros-${ROS_DISTRO}-diagnostic-updater \
+		ros-${ROS_DISTRO}-geographic-msgs \
 		&& apt-get clean autoclean \
 	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
 RUN  geographiclib-get-geoids egm96-5 && \
     geographiclib-get-gravity egm96 && \
     geographiclib-get-magnetic emm2015
-RUN pip3 install future
+RUN pip3 install future catkin_pkg empy pyyaml lxml
 
 
 # Set up environment variables
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
-ENV PYTHONPATH="/opt/venv/lib/python3.10/site-packages:${PYTHONPATH}"
+ENV PYTHONPATH="/opt/venv/lib/python3.10/site-packages:/usr/lib/python3/dist-packages:${PYTHONPATH}"
 
 CMD ["/bin/bash"]
