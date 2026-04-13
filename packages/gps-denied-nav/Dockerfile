@@ -1,9 +1,10 @@
 #---
 # name: gps-denied-nav
-# depends: [opencv, cudastack, torchvision, onnxruntime]
+# depends: [opencv, cudastack, torchvision]
 # requires: '>=36'
 # config: config.py
 #---
+#  [opencv, cudastack, torchvision, onnxruntime]
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
@@ -96,6 +97,28 @@ RUN pip install "onnxslim==0.1.34"
 RUN pip3 install transforms3d
 RUN pip install colorama
 RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
+#
+# MAVROS dependencies
+#
+RUN  apt update && \
+    apt install -y \
+        python3-vcstool \
+        python3-rosinstall-generator \
+        python3-osrf-pycommon \
+        geographiclib-tools \
+        libgeographic-dev \
+		libasio-dev \
+		libgoogle-glog-dev \
+		ros-humble-eigen-stl-containers \
+		ros-humble-diagnostic-updater \
+		ros-humble-geographic-msgs \
+		&& apt-get clean autoclean \
+	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+RUN  geographiclib-get-geoids egm96-5 && \
+    geographiclib-get-gravity egm96 && \
+    geographiclib-get-magnetic emm2015
+RUN pip3 install future
+
 
 # Set up environment variables
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
