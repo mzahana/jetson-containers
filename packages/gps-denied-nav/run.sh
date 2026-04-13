@@ -30,6 +30,14 @@ for path in "/usr/bin/tegrastats" "/usr/lib/aarch64-linux-gnu/tegra" "/usr/src/j
     fi
 done
 
+# Filter out the package name from the arguments
+# so it doesn't get interpreted as the docker command
+for arg in "$@"; do
+    if [ "$arg" != "$CONTAINER_NAME" ]; then
+        filtered_args+=("$arg")
+    fi
+done
+
 exec $REPO_ROOT/run.sh \
     --name "$CONTAINER_NAME" \
     --no-rm \
@@ -38,4 +46,4 @@ exec $REPO_ROOT/run.sh \
     -e RMW_IMPLEMENTATION=rmw_zenoh_cpp \
     $HW_MOUNTS \
     "$IMAGE" \
-    "$@"
+    "${filtered_args[@]}"
