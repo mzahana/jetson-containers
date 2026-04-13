@@ -95,6 +95,7 @@ RUN python3 -m pip install --upgrade pip wheel
 RUN pip install "onnxslim==0.1.34"
 RUN pip3 install transforms3d
 RUN pip install colorama
+RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
 
 # Set up environment variables
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
