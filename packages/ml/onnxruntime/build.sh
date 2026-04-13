@@ -42,14 +42,14 @@ echo "Using cuDNN home: ${CUDNN_HOME}"
 # CUDA compilation (especially cicc) can use 5-10GB per parallel job
 detect_cuda_max_jobs() {
     local total_ram_gb=$(free -g | awk '/^Mem:/{print $2}')
-    local cicc_mem_per_job=6  # GB per cicc process (conservative estimate)
-    local system_reserve=8     # GB to reserve for system/Docker/base build
+    local cicc_mem_per_job=8  # GB per cicc process (conservative estimate for ORT)
+    local system_reserve=10    # GB to reserve for system/Docker/base build
 
     # Calculate safe MAX_JOBS based on total RAM
     local safe_jobs=$(( (total_ram_gb - system_reserve) / cicc_mem_per_job ))
 
     # Clamp between reasonable bounds
-    if [ $safe_jobs -lt 2 ]; then safe_jobs=2; fi
+    if [ $safe_jobs -lt 1 ]; then safe_jobs=1; fi
     if [ $safe_jobs -gt 12 ]; then safe_jobs=12; fi  # Cap at 12 even for large systems
 
     echo $safe_jobs
@@ -125,8 +125,8 @@ else:
     fi
 done
 
-./build.sh --config Release --update --parallel --build --build_wheel --build_shared_lib \
-        --skip_tests --skip_submodule_sync ${ONNXRUNTIME_FLAGS} \
+./build.sh --config Release --update --build --build_wheel --build_shared_lib \
+        --skip_tests --skip_submodule_sync ${ONNXRUNTIME_FLAGS} --nvcc_threads 1 \
         --cmake_extra_defines CMAKE_CXX_FLAGS="-Wno-unused-variable -I/usr/local/cuda/include" \
         --cmake_extra_defines CMAKE_CUDA_ARCHITECTURES="${CUDA_ARCHITECTURES}" \
         --cmake_extra_defines CMAKE_INSTALL_PREFIX=${install_dir} \
@@ -150,4 +150,7 @@ tarpack upload onnxruntime-gpu-${ONNXRUNTIME_VERSION} ${install_dir} || echo "fa
 cd ${install_dir}
 cp -r * /usr/local/
 ls
-#rm -rf /tmp/onnxruntime
+
+# Cleanup build directory to save space
+echo "Cleaning up onnxruntime build directory..."
+rm -rf /opt/onnxruntime
