@@ -57,6 +57,7 @@ exec $REPO_ROOT/run.sh \
     --privileged \
     -v "$HOST_SHARED_VOLUME:/root/shared_volume" \
     -e RMW_IMPLEMENTATION=rmw_zenoh_cpp \
+    -e TERM=$TERM \
     $HW_MOUNTS \
     "$IMAGE" \
     "${filtered_args[@]}"

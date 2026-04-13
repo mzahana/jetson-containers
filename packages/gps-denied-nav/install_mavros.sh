@@ -6,10 +6,16 @@ ROS2_WS=/root/shared_volume/ros2_ws
 # Silence Python deprecation warnings (pkg_resources, setuptools)
 export PYTHONWARNINGS="ignore"
 
+# Colors
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
 #
 # MAVROS
 #
-echo "Cloning mavlink package ... " && sleep 1
+echo -e "${YELLOW}Cloning mavlink package ... ${NC}" && sleep 1
 if [ ! -d "$ROS2_SRC/mavlink" ]; then
     mkdir -p $ROS2_SRC
     cd $ROS2_SRC
@@ -17,7 +23,7 @@ if [ ! -d "$ROS2_SRC/mavlink" ]; then
     cd $ROS2_SRC/mavlink && git checkout release/humble/mavlink/2023.9.9-1
 fi
 
-echo "Cloning custom mavros package ... " && sleep 1
+echo -e "${YELLOW}Cloning custom mavros package ... ${NC}" && sleep 1
 if [ ! -d "$ROS2_SRC/mavros" ]; then
     cd $ROS2_SRC
     git clone https://github.com/mzahana/mavros.git
@@ -32,11 +38,13 @@ cd $ROS2_WS
 if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
     rosdep init
 fi
+echo -e "${YELLOW}Updating rosdep...${NC}"
 rosdep update
+echo -e "${YELLOW}Installing dependencies...${NC}"
 rosdep install --from-paths src --ignore-src -r -y
 
 # Build with flags to suppress CMake warnings and handle Python policies
-echo "Starting build..."
+echo -e "${GREEN}Starting build...${NC}"
 cd $ROS2_WS
 MAKEFLAGS='-j1 -l1' colcon build \
     --packages-up-to mavros_msgs \

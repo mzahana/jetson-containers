@@ -127,4 +127,11 @@ ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
 ENV PYTHONPATH="/opt/venv/lib/python3.10/site-packages:/usr/lib/python3/dist-packages:${PYTHONPATH}"
 
+# Enable colored terminal
+ENV TERM=xterm-256color
+ENV FORCE_COLOR=1
+RUN echo "export PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '" >> ~/.bashrc && \
+    echo "alias ls='ls --color=auto'" >> ~/.bashrc && \
+    echo "alias grep='grep --color=auto'" >> ~/.bashrc
+
 CMD ["/bin/bash"]
