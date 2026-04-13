@@ -14,10 +14,17 @@ HOST_SHARED_VOLUME="$HOME/${CONTAINER_NAME}_shared_volume"
 # Create the shared volume on the host if it doesn't exist
 mkdir -p "$HOST_SHARED_VOLUME"
 
-# Check if a container with the same name already exists and remove it
+# Check if a container with the same name already exists
 if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
-    echo "### Removing existing container: $CONTAINER_NAME"
-    docker rm -f "$CONTAINER_NAME" > /dev/null
+    if [ "$(docker ps -q -f name=^/${CONTAINER_NAME}$)" ]; then
+        echo "### Attaching to running container: $CONTAINER_NAME"
+        docker exec -it "$CONTAINER_NAME" bash
+        exit $?
+    else
+        echo "### Restarting stopped container: $CONTAINER_NAME"
+        docker start -ai "$CONTAINER_NAME"
+        exit $?
+    fi
 fi
 
 echo "### Package-specific run: $CONTAINER_NAME"
