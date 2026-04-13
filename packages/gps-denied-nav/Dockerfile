@@ -117,7 +117,8 @@ RUN  apt update && \
 RUN  geographiclib-get-geoids egm96-5 && \
     geographiclib-get-gravity egm96 && \
     geographiclib-get-magnetic emm2015
-RUN pip3 install future catkin_pkg empy pyyaml lxml
+RUN pip3 install future catkin_pkg pyyaml lxml
+RUN pip3 install empy==3.3.4
 
 
 # Set up environment variables
