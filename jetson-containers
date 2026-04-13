@@ -13,6 +13,17 @@ shift;
 if [ "$COMMAND" = "build" ] || [ "$COMMAND" = "build.sh" ]; then
 	$ROOT/build.sh "$@"
 elif [ "$COMMAND" = "run" ] || [ "$COMMAND" = "run.sh" ]; then
+	# Package-aware run: check if the first non-flag argument has a custom run.sh
+	for arg in "$@"; do
+		if [[ "$arg" == -* ]]; then continue; fi
+		PKG_PATH=$(find "$ROOT/packages" -maxdepth 2 -type d -name "$arg" -print -quit)
+		if [[ -n "$PKG_PATH" && -f "$PKG_PATH/run.sh" ]]; then
+			echo "### Package-aware run: $PKG_PATH/run.sh"
+			$PKG_PATH/run.sh "$@"
+			exit $?
+		fi
+		break
+	done
 	$ROOT/run.sh "$@"
 elif [ "$COMMAND" = "list" ]; then
 	$ROOT/build.sh --list "$@"

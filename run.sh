@@ -280,6 +280,10 @@ if [ "$USE_OPTIONAL_PERMISSION_ARGS" = "true" ]; then
 	OPTIONAL_PERMISSION_ARGS="-v /lib/modules:/lib/modules --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor=unconfined"
 fi
 
+# docker run defaults
+DOCKER_RM="--rm"
+DOCKER_IT="-it"
+
 # check if sudo is needed
 if [ $(id -u) -eq 0 ] || id -nG "$USER" | grep -qw "docker"; then
 	SUDO=""
@@ -292,8 +296,16 @@ filtered_args=()
 
 # Loop through all provided arguments
 for arg in "$@"; do
-    if [[ "$arg" != "--csi2webcam" && "$arg" != --csi-capture-res=* && "$arg" != --csi-output-res=* ]]; then
+    if [[ "$arg" != "--csi2webcam" && "$arg" != --csi-capture-res=* && "$arg" != --csi-output-res=* && "$arg" != "--no-rm" && "$arg" != "--detach" && "$arg" != "-d" ]]; then
         filtered_args+=("$arg")  # Add to the new array if not the argument to remove
+    fi
+
+    if [[ "$arg" == "--no-rm" ]]; then
+        DOCKER_RM=""
+    fi
+
+    if [[ "$arg" == "--detach" || "$arg" == "-d" ]]; then
+        DOCKER_IT="-d"
     fi
 
     if [[ "$arg" = "--name" || "$arg" = --name* ]]; then
@@ -339,7 +351,7 @@ if [ $SYSTEM_ARCH = "tegra-aarch64" ]; then
     # https://stackoverflow.com/a/19226038
 	( set -x ;
 
-	$SUDO docker run --runtime nvidia --env NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics -it --rm --network host \
+	$SUDO docker run --runtime nvidia --env NVIDIA_DRIVER_CAPABILITIES=compute,utility,graphics $DOCKER_IT $DOCKER_RM --network host \
 		--shm-size=8g \
 		--volume /tmp/argus_socket:/tmp/argus_socket \
 		--volume /etc/enctune.conf:/etc/enctune.conf \
@@ -363,7 +375,7 @@ elif [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "x86_64" ]; then
 
 	( set -x ;
 
-	$SUDO docker run --gpus all -it --rm --network=host \
+	$SUDO docker run --gpus all $DOCKER_IT $DOCKER_RM --network=host \
 		--shm-size=8g \
 		--ulimit memlock=-1 \
 		--ulimit stack=67108864 \
