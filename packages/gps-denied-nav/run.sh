@@ -21,11 +21,21 @@ echo "### Shared Volume: $HOST_SHARED_VOLUME"
 # Call the core run.sh with the necessary flags
 # --no-rm maintains the container after exit for re-entry
 # --privileged is used for hardware/USB access
+
+# Additional hardware mounts from host (only if they exist)
+HW_MOUNTS=""
+for path in "/usr/bin/tegrastats" "/usr/lib/aarch64-linux-gnu/tegra" "/usr/src/jetson_multimedia_api" "/opt/nvidia/nsight-systems-cli" "/opt/nvidia/vpi2" "/usr/share/vpi2"; do
+    if [ -e "$path" ]; then
+        HW_MOUNTS="$HW_MOUNTS -v $path:$path"
+    fi
+done
+
 exec $REPO_ROOT/run.sh \
     --name "$CONTAINER_NAME" \
     --no-rm \
     --privileged \
     -v "$HOST_SHARED_VOLUME:/root/shared_volume" \
     -e RMW_IMPLEMENTATION=rmw_zenoh_cpp \
+    $HW_MOUNTS \
     "$IMAGE" \
     "$@"
