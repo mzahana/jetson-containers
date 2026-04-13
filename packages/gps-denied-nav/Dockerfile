@@ -101,5 +101,6 @@ RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
 ENV ROS_ROOT=/opt/ros/${ROS_DISTRO}
 ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
+ENV PYTHONPATH="/opt/venv/lib/python3.10/site-packages:${PYTHONPATH}"
 
 CMD ["/bin/bash"]
