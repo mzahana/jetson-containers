@@ -60,6 +60,7 @@ parser.add_argument('--package-dirs', type=str, default='', help="additional pac
 parser.add_argument('--list-packages', action='store_true', help="show the list of packages that were found under the search directories")
 parser.add_argument('--show-packages', action='store_true', help="show info about one or more packages (if none are specified, all will be listed")
 parser.add_argument('--skip-packages', type=str, default='', help="disable certain packages/containers (filterable by wildcards, comma/colon-separated)")
+parser.add_argument('--start-from', type=str, default='', help="skip all layers before this package (assumes their images already exist), e.g. --start-from ihunter")
 parser.add_argument('--skip-errors', action='store_true', help="continue building when errors occur (only relevant when --multiple is in use)")
 parser.add_argument('--skip-tests', type=str, default='', help="comma-separated list of package tests to disable ('intermediate' to disable build-stage tests, 'all' to disable all)")
 parser.add_argument('--test-only', type=str, default='', help="only test the specified packages (comma/colon-separated list)")

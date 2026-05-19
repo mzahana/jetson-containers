@@ -200,7 +200,7 @@ def build_container(
         build_flags: str='',
         build_args: dict=None, simulate: bool=False,
         skip_packages: list=[], skip_tests: list=[], test_only: list=[],
-        push: str='', no_github_api=False, **kwargs
+        push: str='', no_github_api=False, start_from: str='', **kwargs
     ):
     """
     Multi-stage container build that chains together selected packages into one container image.
@@ -322,6 +322,14 @@ def build_container(
             # generate the logging file (without the extension)
             log_file = os.path.join(get_log_dir('build'), f"{idx+1:02d}o{len(packages)}_{container_name.replace('/','_')}").replace(':','_')
             jetpack_version = get_jetpack_version()
+            # --start-from: treat layers before the target as already built
+            if start_from and package.split(':')[0] != start_from.split(':')[0]:
+                if package == packages[-1]:
+                    raise ValueError(f'--start-from {start_from!r} not found in build chain: {packages}')
+                base = container_name
+                continue
+            start_from = ''  # stop skipping once we reach the target
+
             if 'dockerfile' in pkg:
                 dockerfilepath = os.path.join(pkg['path'], pkg['dockerfile'])
 
