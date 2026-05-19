@@ -8,7 +8,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || readlink -f "$ROOT/../.
 
 # Default configurations
 CONTAINER_NAME="ihunter"
-IMAGE="ihunter:r36.5.tegra-aarch64-cu126-22.04"
+IMAGE="ihunter_container:r36.5.tegra-aarch64-cu126-22.04"
 HOST_SHARED_VOLUME="$HOME/${CONTAINER_NAME}_shared_volume"
 
 # Create the shared volume on the host if it doesn't exist

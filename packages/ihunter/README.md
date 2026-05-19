@@ -95,20 +95,34 @@ If you specifically want to open an additional parallel terminal in the running 
 docker exec -it ihunter bash
 ```
 
-## MAVROS Installation (Post-Build)
+## ROS2 Packages Installation (Post-Build)
 
 > [!IMPORTANT]
-> The `install_mavros.sh` script needs to be run **once** inside the container after a fresh build to set up the MAVROS workspace.
-0. Copy the `install_mavros.sh` script to the shared volume:
+> The `clone_ihunter_ros_pkgs.sh` script needs to be run **once** inside the container after a fresh build to clone and build all required ROS2 packages into the shared workspace.
+
+The script clones and builds the following packages (all on the `ros2_humble` branch):
+
+- **MAVROS** — `mavros` + `mavlink` (built via colcon)
+- **d2dtracker_drone_detector** — drone detection
+- **multi_target_kf** — multi-target Kalman filter
+- **custom_trajectory_msgs** — custom ROS2 message definitions
+- **trajectory_prediction** — constant-velocity and Bezier-based trajectory prediction
+- **drone_path_predictor_ros** — GRU-based trajectory prediction
+- **trajectory_generation** — MPC-based trajectory generation
+- **mav_controllers_ros** — MAV controllers
+
+**Steps:**
+
+0. Copy the script to the shared volume:
    ```bash
-   cp install_mavros.sh ~/ihunter_shared_volume/
+   cp clone_ihunter_ros_pkgs.sh ~/ihunter_shared_volume/
    ```
 1. Enter the container: `jetson-containers run ihunter`
-2. Run the installation script:
+2. Run the script:
    ```bash
-   bash /root/shared_volume/install_mavros.sh
+   bash /root/shared_volume/clone_ihunter_ros_pkgs.sh
    ```
-   *Note: This script will clone and build MAVROS inside your shared ROS2 workspace.*
+   *Note: This script will clone all packages and build MAVROS inside your shared ROS2 workspace.*
 
 ## Shared Volume
 Any data or code placed in `~/ihunter_shared_volume` on the Jetson host will be available at `/root/shared_volume` inside the container. This is the recommended location for your ROS2 workspace and configuration files.

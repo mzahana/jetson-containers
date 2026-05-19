@@ -95,29 +95,72 @@ RUN python3 -m pip install --upgrade pip wheel
 # Install onnxslim==0.1.34. Needed in "yolo export"
 RUN pip install "onnxslim==0.1.34"
 RUN pip3 install transforms3d
-RUN pip install colorama
 RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
 #
 # MAVROS dependencies
 #
-RUN  apt update && \
+# Original apt install (requires ports.ubuntu.com — blocked on this network):
+# RUN apt update && \
+#     apt install -y \
+#         python3-vcstool \
+#         python3-rosinstall-generator \
+#         python3-osrf-pycommon \
+#         geographiclib-tools \
+#         libgeographic-dev \
+#         libasio-dev \
+#         libgoogle-glog-dev \
+#         ros-${ROS_DISTRO}-eigen-stl-containers \
+#         ros-${ROS_DISTRO}-diagnostic-updater \
+#         ros-${ROS_DISTRO}-geographic-msgs \
+#     && apt-get clean autoclean \
+#     && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+# Install packages available from reachable repos (ROS apt server)
+RUN apt update && \
     apt install -y \
         python3-vcstool \
         python3-rosinstall-generator \
         python3-osrf-pycommon \
-        geographiclib-tools \
-        libgeographic-dev \
-		libasio-dev \
-		libgoogle-glog-dev \
-		ros-${ROS_DISTRO}-eigen-stl-containers \
-		ros-${ROS_DISTRO}-diagnostic-updater \
-		ros-${ROS_DISTRO}-geographic-msgs \
-		&& apt-get clean autoclean \
-	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+        libasio-dev \
+        ros-${ROS_DISTRO}-eigen-stl-containers \
+        ros-${ROS_DISTRO}-diagnostic-updater \
+        ros-${ROS_DISTRO}-geographic-msgs \
+        python3-click \
+        python3-colorama \
+        python3-future \
+    && apt-get clean autoclean \
+    && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+# Build gflags from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v2.2.2 --depth 1 https://github.com/gflags/gflags.git && \
+    cd gflags && mkdir build && cd build && \
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/gflags
+
+# Build glog from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v0.6.0 --depth 1 https://github.com/google/glog.git && \
+    cd glog && mkdir build && cd build && \
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/glog
+
+# Build GeographicLib from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v2.3 --depth 1 https://github.com/geographiclib/geographiclib.git && \
+    cd geographiclib && mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/geographiclib
 RUN  geographiclib-get-geoids egm96-5 && \
     geographiclib-get-gravity egm96 && \
     geographiclib-get-magnetic emm2015
-RUN pip3 install future catkin_pkg pyyaml lxml
+RUN pip3 install catkin_pkg pyyaml lxml
 RUN pip3 install empy==3.3.4
 
 
@@ -150,3 +193,24 @@ RUN cd /tmp && \
     pip3 install --no-deps . && \
     cd / && \
     rm -rf /tmp/siyi_sdk
+
+#
+# Install osqp and osqpEigen. Needed for MPC and quadratic optimization
+#
+RUN cd / && \
+    git clone --recursive https://github.com/osqp/osqp.git && \
+    cd /osqp && git checkout 25b6b39 && \
+    git submodule update --recursive && \
+    cd /osqp && \
+    mkdir build && cd build && \
+    cmake -G "Unix Makefiles" .. && \
+    cmake --build . && \
+    cmake --build . --target install
+RUN cd / && git clone https://github.com/robotology/osqp-eigen.git && \
+    cd /osqp-eigen && git checkout v0.8.0 && \
+    cd /osqp-eigen && \
+    mkdir build && mkdir install && \
+    cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release ../ && \
+    make && make install
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
