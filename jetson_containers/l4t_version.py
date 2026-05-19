@@ -35,7 +35,6 @@ def get_l4t_version(version_file='/etc/nv_tegra_release', l4t_version: str = Non
 
     The L4T_VERSION will either be parsed from /etc/nv_tegra_release or the $L4T_VERSION environment variable.
     """
-    print(f"l4t_version: {l4t_version}")
     if l4t_version:
         return Version(l4t_version) if not isinstance(l4t_version, Version) else l4t_version
 
@@ -43,11 +42,11 @@ def get_l4t_version(version_file='/etc/nv_tegra_release', l4t_version: str = Non
         return Version(os.environ['L4T_VERSION'].lower().lstrip('r'))
 
     if CUDA_ARCH != 'tegra-aarch64':
-        return Version('39.0.0')  # for x86 to unlock L4T checks
+        return Version('39.1.0')  # for x86 to unlock L4T checks
 
     if not os.path.isfile(version_file):
         # raise IOError(f"L4T_VERSION file doesn't exist:  {version_file}")
-        return Version('39.0.0')
+        return Version('39.1.0')
 
     with open(version_file) as file:
         line = file.readline()
@@ -113,7 +112,7 @@ def nv_tegra_release(version_file='/etc/nv_tegra_release', dst=None):
     return text
 
 
-def get_jetpack_version(l4t_version: str = None, default='6.2'):
+def get_jetpack_version(l4t_version: str = None, default='7.2'):
     """
     Returns the version of JetPack (based on the L4T version)
     https://github.com/rbonghi/jetson_stats/blob/master/jtop/core/jetson_variables.py
@@ -131,7 +130,8 @@ def get_jetpack_version(l4t_version: str = None, default='6.2'):
 
     NVIDIA_JETPACK = {
         # -------- JP7 --------
-        "39.0.0": "7.2", # Orin SBSA
+        "39.1.0": "7.2 GA",  # Orin SBSA
+        "39.0.0": "7.2 EA", # Orin SBSA
         "38.4.0": "7.1", # Q4 2025 T400 Support
         "38.2.2": "7.0 GA",
         "38.2.0": "7.0 GA",
