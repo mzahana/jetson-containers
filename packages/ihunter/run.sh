@@ -8,7 +8,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || readlink -f "$ROOT/../.
 
 # Default configurations
 CONTAINER_NAME="ihunter"
-IMAGE="ihunter_container:r36.5.tegra-aarch64-cu126-22.04"
+IMAGE="ihunter_container:r36.5.tegra-aarch64-cu126-22.04-ihunter"
 HOST_SHARED_VOLUME="$HOME/${CONTAINER_NAME}_shared_volume"
 
 # Create the shared volume on the host if it doesn't exist
@@ -21,6 +21,10 @@ if [ "$(docker ps -aq -f name=^/${CONTAINER_NAME}$)" ]; then
         docker exec -it "$CONTAINER_NAME" bash
         exit $?
     else
+        # Re-create X auth file wiped by reboot
+        [ -d /tmp/.docker.xauth ] && rm -rf /tmp/.docker.xauth; touch /tmp/.docker.xauth 2>/dev/null || true
+        xauth nlist "$DISPLAY" 2>/dev/null | sed -e "s/^..../ffff/" | xauth -f /tmp/.docker.xauth nmerge - 2>/dev/null || true
+        chmod 777 /tmp/.docker.xauth 2>/dev/null || true
         echo "### Restarting stopped container: $CONTAINER_NAME"
         docker start -ai "$CONTAINER_NAME"
         exit $?
@@ -55,6 +59,7 @@ exec $REPO_ROOT/run.sh \
     --name "$CONTAINER_NAME" \
     --no-rm \
     --privileged \
+    --ipc=host \
     -v "$HOST_SHARED_VOLUME:/root/shared_volume" \
     -e RMW_IMPLEMENTATION=rmw_zenoh_cpp \
     -e TERM=$TERM \

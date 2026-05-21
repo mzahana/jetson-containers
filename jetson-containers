@@ -13,6 +13,14 @@ shift;
 if [ "$COMMAND" = "build" ] || [ "$COMMAND" = "build.sh" ]; then
 	$ROOT/build.sh "$@"
 elif [ "$COMMAND" = "run" ] || [ "$COMMAND" = "run.sh" ]; then
+	# Re-create /tmp files that get wiped on reboot but are baked into container bind-mounts.
+	# Docker auto-creates missing bind-mount sources as directories, which breaks docker start.
+	[ -d /tmp/.docker.xauth ] && rm -rf /tmp/.docker.xauth; touch /tmp/.docker.xauth 2>/dev/null || true
+	if [ -n "$DISPLAY" ]; then
+		xauth nlist "$DISPLAY" 2>/dev/null | sed -e 's/^..../ffff/' | xauth -f /tmp/.docker.xauth nmerge - 2>/dev/null || true
+		chmod 777 /tmp/.docker.xauth 2>/dev/null || true
+	fi
+	[ -d /tmp/nv_jetson_model ] && rm -rf /tmp/nv_jetson_model; [ ! -f /tmp/nv_jetson_model ] && cat /proc/device-tree/model > /tmp/nv_jetson_model 2>/dev/null || true
 	# Package-aware run: check if the first non-flag argument has a custom run.sh
 	for arg in "$@"; do
 		if [[ "$arg" == -* ]]; then continue; fi
