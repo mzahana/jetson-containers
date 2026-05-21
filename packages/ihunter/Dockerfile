@@ -96,6 +96,9 @@ RUN python3 -m pip install --upgrade pip wheel
 RUN pip install "onnxslim==0.1.34"
 RUN pip3 install transforms3d
 RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
+# Pin NumPy <2 so ROS Humble cv_bridge (compiled against NumPy 1.x) does not hit
+# the _ARRAY_API ABI mismatch error at import time.
+RUN pip3 install "numpy==1.26.4"
 #
 # MAVROS dependencies
 #
@@ -186,7 +189,7 @@ RUN pip3 install "structlog>=24.0" "pyserial-asyncio>=0.6" "typing-extensions>=4
 # PyGObject is provided by python3-gi which is installed by the gstreamer package in jetson-containers
 RUN pip3 install "aiortsp>=1.2" "av>=12.0" "fastapi>=0.110" "uvicorn[standard]>=0.29" "pydantic>=2.7"
 
-# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV)
+# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV).
 RUN cd /tmp && \
     git clone -b siyi-sdk-v2 https://github.com/mzahana/siyi_sdk.git && \
     cd siyi_sdk && \
@@ -214,3 +217,6 @@ RUN cd / && git clone https://github.com/robotology/osqp-eigen.git && \
     cmake -DCMAKE_BUILD_TYPE=Release ../ && \
     make && make install
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+# Final NumPy pin: defeat any transitive upgrade pulled in by later pip installs.
+RUN pip3 install --force-reinstall --no-deps "numpy==1.26.4"
