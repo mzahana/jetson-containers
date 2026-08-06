@@ -189,13 +189,7 @@ RUN pip3 install "structlog>=24.0" "pyserial-asyncio>=0.6" "typing-extensions>=4
 # PyGObject is provided by python3-gi which is installed by the gstreamer package in jetson-containers
 RUN pip3 install "aiortsp>=1.2" "av>=12.0" "fastapi>=0.110" "uvicorn[standard]>=0.29" "pydantic>=2.7"
 
-# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV).
-RUN cd /tmp && \
-    git clone -b siyi-sdk-v2 https://github.com/mzahana/siyi_sdk.git && \
-    cd siyi_sdk && \
-    pip3 install --no-deps . && \
-    cd / && \
-    rm -rf /tmp/siyi_sdk
+
 
 #
 # Install osqp and osqpEigen. Needed for MPC and quadratic optimization
@@ -220,3 +214,14 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 # Final NumPy pin: defeat any transitive upgrade pulled in by later pip installs.
 RUN pip3 install --force-reinstall --no-deps "numpy==1.26.4"
+
+RUN echo "Busting cache for SDK update: siyi_sdk 15b60b8 gstreamer reconnect fix, siyi_ros2 9dda970 udp transport 2026-08-06"
+# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV).
+RUN cd /tmp && \
+    git clone -b siyi-sdk-v2 https://github.com/mzahana/siyi_sdk.git && \
+    cd siyi_sdk && \
+    pip3 install --no-deps . && \
+    cd / && \
+    rm -rf /tmp/siyi_sdk
+# Install ROS2 Camera Info Manager Python package    
+RUN apt-get update && apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-camera-info-manager-py
