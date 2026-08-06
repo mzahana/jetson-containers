@@ -57,14 +57,36 @@ mkdir -p ~/ihunter_shared_volume/ros2_ws/src
 
 ## Building the Image
 
-After the restart, run the following command to build the base image:
+> [!WARNING]
+> **Do not run a bare `jetson-containers build ihunter`.** Without `--name`,
+> the tool computes the image name from the last package (`ihunter`, not
+> `ihunter_container`), so it can't find the existing intermediate images and
+> rebuilds the **entire 18-stage chain from scratch** under the wrong name.
+> That takes hours and needs disk this device does not have to spare.
+
+### Everyday case: you only changed `ihunter/Dockerfile`
+
+Use the wrapper script, which always builds under the right name and only
+rebuilds the `ihunter` layer on top of the existing chain:
 
 ```bash
-# (NEW---still testing!!!)
-jetson-containers build --name=ihunter_container ihunter --skip-tests all
+./build.sh              # incremental build (only the ihunter layer)
+./build.sh --simulate   # dry run first — confirm it prints exactly ONE
+                         # "docker buildx build" before running for real
 ```
 
-This will chain the necessary dependencies (OpenCV, CUDA, ROS2, etc.) and produce a compatible image.
+This is equivalent to:
+```bash
+jetson-containers build --name ihunter_container --start-from ihunter --skip-tests all ihunter
+```
+
+### Full chain rebuild (only with disk headroom — check `df -h /` first)
+
+```bash
+./build.sh --full
+# equivalent to:
+# jetson-containers build --name ihunter_container --skip-tests all ihunter
+```
 
 ## Running the Container
 
