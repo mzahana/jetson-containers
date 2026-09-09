@@ -61,7 +61,10 @@ fi
 step "Host packages"
 need=()
 command -v git  >/dev/null || need+=(git)
-command -v vcs  >/dev/null || need+=(python3-vcstool)
+# python3-yaml, NOT python3-vcstool: vcstool is not in Ubuntu's archive, it
+# comes from the ROS apt repo, and this board deliberately does not have that
+# repo -- ROS lives in the container. import-workspace.sh uses git directly.
+python3 -c 'import yaml' 2>/dev/null || need+=(python3-yaml)
 command -v rsync >/dev/null || need+=(rsync)
 if [ ${#need[@]} -gt 0 ]; then
     sudo apt-get update -qq
@@ -70,7 +73,7 @@ if [ ${#need[@]} -gt 0 ]; then
     sudo apt-get install -y "${need[@]}" || die "apt failed.
        If dpkg is in a broken state: sudo dpkg --configure -a"
 fi
-ok "git, vcstool, rsync"
+ok "git, python3-yaml, rsync"
 
 # --- 3. docker ---------------------------------------------------------------
 step "Docker"

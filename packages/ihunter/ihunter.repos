@@ -1,6 +1,6 @@
 # The iHunter ROS 2 workspace, exactly.
 #
-#   cd ~/ihunter_shared_volume && vcs import < ihunter.repos
+#   ./packages/ihunter/import-workspace.sh          (or vcs import, if you have it)
 #
 # This file replaces clone_ihunter_ros_pkgs.sh, which had drifted: it was
 # missing geo_tuner, mav_navigator_ros, ihunter_system and interception_guidance

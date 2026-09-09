@@ -59,8 +59,9 @@ if [ "$SKIP_BUILD" = 0 ] && [ "$free_gb" -lt "$MIN_BUILD_GB" ]; then
 fi
 ok "${free_gb}G free on /"
 
-command -v vcs >/dev/null || die "vcstool is missing: sudo apt install python3-vcstool"
-ok "vcstool present"
+python3 -c 'import yaml' 2>/dev/null \
+    || die "python3-yaml is missing: sudo apt install -y python3-yaml"
+ok "git + python3-yaml (vcstool is deliberately NOT required -- see import-workspace.sh)"
 
 # --- 2. the workspace --------------------------------------------------------
 step "Importing the ROS 2 workspace"
@@ -78,10 +79,9 @@ if ! ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -T git@github.com 
     echo "       another board), then re-run. Everything else will import now."
 fi
 
-( cd "$SHARED" && vcs import --input "$HERE/ihunter.repos" --workers 4 ) \
-    || warn "some repositories failed to import -- see above (private ones need the key)"
-missing=$(cd "$SHARED" && vcs validate --input "$HERE/ihunter.repos" 2>&1 | grep -c "does not exist" || true)
-ok "workspace at $SHARED/ros2_ws/src ($(ls -1 "$SHARED/ros2_ws/src" | wc -l) packages)"
+"$HERE/import-workspace.sh" "$HERE/ihunter.repos" "$SHARED" \
+    || warn "some repositories failed -- see above (the private ones need the deploy key)"
+ok "workspace at $SHARED/ros2_ws/src ($(ls -1 "$SHARED/ros2_ws/src" 2>/dev/null | wc -l) packages)"
 
 # --- 3. the image ------------------------------------------------------------
 if [ "$SKIP_BUILD" = 1 ]; then
