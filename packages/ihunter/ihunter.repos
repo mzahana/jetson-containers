@@ -1,0 +1,113 @@
+# The iHunter ROS 2 workspace, exactly.
+#
+#   cd ~/ihunter_shared_volume && vcs import < ihunter.repos
+#
+# This file replaces clone_ihunter_ros_pkgs.sh, which had drifted: it was
+# missing geo_tuner, mav_navigator_ros, ihunter_system and interception_guidance
+# -- four of the packages the vehicle actually flies -- and several packages in
+# the live workspace had been added by hand with no record of where they came
+# from. A script that clones "the packages" is a list nobody remembers to edit;
+# a manifest is a list that is obviously wrong when it is wrong.
+#
+# EVERY ENTRY IS PINNED TO A COMMIT, not a branch. A branch means two imports a
+# month apart give different code, and the difference is invisible until
+# something flies differently. To move a package forward: check out the new
+# commit, test it, then update the SHA here in a commit of its own.
+#
+# SHAs below are the state flown on 2026-09-09 (read off the vehicle).
+#
+# Private repositories use SSH URLs and need a read-only deploy key on the
+# board; see bootstrap.sh. The image itself is built from public dependencies
+# only, so no credential ever enters a Docker layer.
+
+repositories:
+
+  # --- the autopilot link -------------------------------------------------
+  ros2_ws/src/mavlink:
+    type: git
+    url: https://github.com/ros2-gbp/mavlink-gbp-release.git
+    version: bc5543fd574138d9e244a7f0600d7144fa537990   # release/humble/mavlink/2023.9.9-1
+  ros2_ws/src/mavros:
+    type: git
+    url: https://github.com/mzahana/mavros.git
+    version: 3b3804f6a73eee746d85798274238406c5e3f0a4
+
+  # --- control ------------------------------------------------------------
+  ros2_ws/src/mav_controllers_ros:
+    type: git
+    url: https://github.com/mzahana/mav_controllers_ros.git
+    version: 46b9263fbed3d0d63447cc537013960124a75fd2
+  ros2_ws/src/geo_tuner:
+    type: git
+    url: https://github.com/mzahana/geo_tuner.git
+    version: 21907d5ab1550d5c32325ef974925bedd3265932
+
+  # --- navigation and trajectories ----------------------------------------
+  # PRIVATE
+  ros2_ws/src/mav_navigator_ros:
+    type: git
+    url: git@github.com:khaledgabr77/mav_navigator_ros.git
+    version: c458d972f8b71dbbf12664cbe7ed2afbd945fa34   # feature/production-navigator
+  ros2_ws/src/custom_trajectory_msgs:
+    type: git
+    url: https://github.com/mzahana/custom_trajectory_msgs.git
+    version: aff25722651209e532e7b845ef9bdc97d818567b
+  ros2_ws/src/trajectory_generation:
+    type: git
+    url: https://github.com/mzahana/trajectory_generation.git
+    version: c524c1ff18f965368cb191b9bf75d1129e6171e8
+  ros2_ws/src/trajectory_prediction:
+    type: git
+    url: https://github.com/mzahana/trajectory_prediction.git
+    version: a8df225dab5a035b11ca7fd2713c76a67269f238
+  ros2_ws/src/drone_path_predictor_ros:
+    type: git
+    url: https://github.com/mzahana/drone_path_predictor_ros.git
+    version: 779e860e990f2f09a0fea8924ba8e4f9562148b6
+
+  # --- perception and tracking --------------------------------------------
+  ros2_ws/src/d2dtracker_drone_detector:
+    type: git
+    url: https://github.com/mzahana/d2dtracker_drone_detector.git
+    version: 6ca791a0d306399d1f79a8755ed9b68396263029
+  ros2_ws/src/multi_target_kf:
+    type: git
+    url: https://github.com/mzahana/multi_target_kf.git
+    version: 5b5f6d9871fea0254d4f71242c59c69935c4bc9a
+  ros2_ws/src/siyi_ros2:
+    type: git
+    url: https://github.com/mzahana/siyi_ros2.git
+    version: 9dda970bd07559f981f51a713137f0194aac1489
+  ros2_ws/src/siyi_msgs:
+    type: git
+    url: https://github.com/mzahana/siyi_msgs.git
+    version: 7ca05374739c830941c4e76651cfe61d2169910b
+
+  # --- the vehicle, and what it does --------------------------------------
+  # PRIVATE. ihunter_system holds this airframe's numbers -- mass, thrust map,
+  # gains, geofence, the operator CLI. interception_guidance holds the guidance
+  # law. Everything above this line is generic; these two are the aircraft.
+  ros2_ws/src/ihunter_system:
+    type: git
+    url: git@github.com:mzahana/ihunter_system.git
+    version: 60ae6f9979e875d4364c3cfd95cffe6bab0fa00b
+  ros2_ws/src/interception_guidance:
+    type: git
+    url: git@github.com:mzahana/interception_guidance.git
+    version: main
+    # NOTE: not pinned, and NOT PRESENT on the vehicle as of 2026-09-09 -- the
+    # board cannot fly an engagement until this is imported. Pin it to the
+    # commit that is flown as soon as one has been flown.
+
+# --- deliberately NOT in this manifest ------------------------------------
+#
+# Present in the 2026-09-09 workspace, excluded here on purpose:
+#
+#   apriltag_ros          a git checkout with no remote configured; nothing in
+#                         the flight stack depends on it.
+#   balloon_tracker_cpp   no .git at all -- hand-copied, origin unrecorded.
+#   balloon_bytetrack_cpp,
+#   d2dtracker_sim        simulation-only; the SITL stack lives elsewhere.
+#
+# If any of these turns out to be needed for flight, find its origin and add it
+# here rather than copying the directory onto the next board.

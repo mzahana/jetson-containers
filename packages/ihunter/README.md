@@ -3,6 +3,65 @@
 > [!CAUTION]
 > This package and its build scripts are **only confirmed to work on JetPack 6** (L4T r36.x). Do not attempt to use this on JetPack 5 or below.
 
+## Setting up a board: read this first
+
+Everything below `System Setup` is the manual procedure, kept because it explains
+what each piece is for. **On a fresh board you do not need to follow it by hand:**
+
+```bash
+git clone -b custom_packages git@github.com:mzahana/jetson-containers.git
+cd jetson-containers
+./packages/ihunter/bootstrap.sh
+sudo reboot
+```
+
+`bootstrap.sh` checks the board, imports the ROS 2 workspace from `ihunter.repos`
+(every package pinned to a commit), builds the image, builds the workspace, and
+installs the host services. It is a **desk job**: it needs the internet and takes
+hours. Steps 2 and 3 of `System Setup` (the Docker default runtime, and the
+docker group) still have to be done once by hand before it will work.
+
+After the reboot the board is a flyable vehicle with nothing running that can
+command it, and the laptop drives it from there (`ihunter check`).
+
+| File | What it is |
+|---|---|
+| `bootstrap.sh` | fresh Jetson to flyable vehicle, idempotent |
+| `ihunter.repos` | the ROS 2 workspace, every package pinned to a commit |
+| `host/` | the host services: container at boot, supervised zenoh router, and `ihunter-run` for starting a flight |
+| `build.sh` | incremental image build. Never a bare `jetson-containers build ihunter` |
+| `clone_ihunter_ros_pkgs.sh` | **superseded** by `ihunter.repos`; kept only as a pointer |
+
+### The host services
+
+The container is a **service**, not something you log into and start:
+
+```bash
+ihunter-container status     # container, router, image, disk -- one line each
+ihunter-run status           # what flight is running, its log, its bag
+```
+
+Both start at boot. No `ros2 launch` ever does -- the container and the router are
+plumbing, but a launch can command the aircraft, so starting one is always a
+deliberate act by a person, from the laptop.
+
+Install or update them by hand with `sudo ./host/install.sh --enable`; see
+`host/README.md` for why each choice was made, including the four silent failure
+modes the reboot tests found.
+
+### Private repositories
+
+`ihunter_system`, `mav_navigator_ros` and `interception_guidance` are private and
+use SSH URLs in `ihunter.repos`. A board needs a **read-only deploy key of its
+own** to import them -- never a personal key, and never one copied from another
+board. The image is built from public dependencies only and the ROS workspace is
+bind-mounted rather than baked, so no credential ever enters a Docker layer.
+
+In the field there is no internet: deploy with `git bundle` + `scp`, which needs
+no credentials at all.
+
+---
+
 ## System Setup
 
 Follow these steps on your Jetson device before building the container.
@@ -89,6 +148,17 @@ jetson-containers build --name ihunter_container --start-from ihunter --skip-tes
 ```
 
 ## Running the Container
+
+> [!IMPORTANT]
+> **On a vehicle, do not use `jetson-containers run ihunter` for bring-up.** The
+> container is a systemd service that starts at boot (`host/`), and two things
+> make the manual command wrong there: it needs the internet (its autotag step
+> contacts a registry, so it fails in the field), and it creates a container
+> that no restart policy owns. Use `ihunter-container up` / `status`, or just
+> power the board on. `jetson-containers run ihunter` remains the right command
+> on a **development** board where you want an interactive container.
+>
+> For a shell inside the running container: `ihunter-container shell`.
 
 The package includes a custom run configuration that sets up persistent shared volumes and hardware access.
 

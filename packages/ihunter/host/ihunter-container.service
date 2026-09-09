@@ -1,0 +1,22 @@
+[Unit]
+Description=iHunter container (long-lived, owns every flight process)
+Documentation=https://github.com/mzahana/ihunter_fixes/blob/main/docs/FIELD_OPERATIONS_PLAN.md
+Requires=docker.service
+After=docker.service
+# Deliberately NO ordering against jtop.service. jtop is After=multi-user.target
+# and this unit is WantedBy=multi-user.target, so any After=jtop.service here
+# closes an ordering cycle -- and systemd resolves a cycle by silently DELETING
+# this unit's start job. The symptom is a unit that is "enabled", never runs,
+# and logs nothing at all. Found by the reboot test, 2026-09-09. The container
+# is instead made independent of /run/jtop.sock; see ihunter-container.sh.
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Creation on a fresh board can take a moment; starting an existing one is fast.
+TimeoutStartSec=300
+ExecStart=/usr/local/bin/ihunter-container up
+ExecStop=/usr/local/bin/ihunter-container stop
+
+[Install]
+WantedBy=multi-user.target

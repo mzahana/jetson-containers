@@ -1,0 +1,18 @@
+[Unit]
+Description=iHunter zenoh router (rmw_zenohd)
+Requires=ihunter-container.service
+After=ihunter-container.service
+# The router is meaningless without the container, and must go down with it.
+BindsTo=ihunter-container.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ihunter-router
+# Killing a `docker exec` client does not kill the process it started inside the
+# container, so stopping this unit must reach in and stop the router explicitly.
+ExecStop=-/usr/bin/docker exec ihunter pkill -x rmw_zenohd
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
