@@ -16,6 +16,11 @@
 #
 # SHAs below are the state flown on 2026-09-09 (read off the vehicle).
 #
+# BUMPING A PIN IS PART OF DEPLOYING. When you deploy a new ihunter_system (or
+# any package) to the vehicle, update its SHA here in the same sitting --
+# otherwise import-workspace.sh reports drift on every board and people learn to
+# ignore it, which costs more than the pin was ever worth.
+#
 # Private repositories use SSH URLs and need a read-only deploy key on the
 # board; see bootstrap.sh. The image itself is built from public dependencies
 # only, so no credential ever enters a Docker layer.
@@ -90,7 +95,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: b43fd4993653d9e132d577cc67b5f38733664af4
+    version: aecd788928d0add48697531b8515c67184d09b83
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
