@@ -5,6 +5,11 @@
 
 ## Setting up a board: read this first
 
+> **Full procedure, both machines:** `docs/BRINGUP.md` in the private
+> `ihunter_system` repository takes a bare Jetson *and* a bare field laptop to a
+> flyable system, with the failure modes and their symptoms. This section is the
+> container half of it.
+
 Everything below `System Setup` is the manual procedure, kept because it explains
 what each piece is for. **On a fresh board you do not need to follow it by hand:**
 
