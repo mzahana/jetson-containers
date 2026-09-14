@@ -164,14 +164,16 @@ status() {
 
     # The newest bag, and whether it has been closed properly. metadata.yaml is
     # written on clean shutdown, so its absence in a bag nobody is writing to is
-    # the signature of a hard kill.
+    # the signature of a hard kill. A power cut leaves it present but EMPTY
+    # (2026-09-14 reported "closed: yes" for exactly that), so test the content.
     local bag
     bag="$(ls -1dt "$HOST_SHARED"/bags/*/ 2>/dev/null | head -1 || true)"
     if [ -n "$bag" ]; then
         echo "bag:        $bag ($(du -sh "$bag" 2>/dev/null | cut -f1))"
-        if [ -f "$bag/metadata.yaml" ]; then echo "  closed:   yes"
-        elif [ -n "$any" ];                 then echo "  closed:   not yet (still recording)"
-        else echo "  closed:   NO -- written by a run that did not shut down cleanly"; fi
+        if grep -qs '^rosbag2_bagfile_information:' "$bag/metadata.yaml"; then
+            echo "  closed:   yes"
+        elif [ -n "$any" ]; then echo "  closed:   not yet (still recording)"
+        else echo "  closed:   NO -- not shut down cleanly (power cut?); ihunter fetch repairs it"; fi
     else
         echo "bag:        none yet"
     fi
