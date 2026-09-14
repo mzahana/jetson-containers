@@ -45,7 +45,7 @@ repositories:
   ros2_ws/src/geo_tuner:
     type: git
     url: https://github.com/mzahana/geo_tuner.git
-    version: 21907d5ab1550d5c32325ef974925bedd3265932
+    version: 9a7b4296e28004bf6f3bdf97fed81142ec7d1274
 
   # --- navigation and trajectories ----------------------------------------
   # PRIVATE
@@ -95,7 +95,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: dab0bfdab421ccad1745b90eb995767aebe7db18
+    version: 5d7f14073ad41bbdf2d1d7e80e4f9d1583d7c406
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
