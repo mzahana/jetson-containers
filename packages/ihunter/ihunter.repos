@@ -60,7 +60,11 @@ repositories:
   ros2_ws/src/trajectory_generation:
     type: git
     url: https://github.com/mzahana/trajectory_generation.git
-    version: c524c1ff18f965368cb191b9bf75d1129e6171e8
+    version: f799c376b81e6383b4182eea8a84925761d842d9
+    # interception_guidance LINKS this package (trajectory_generation::mpc_12state_lib,
+    # the MPC embedded in the engagement manager). f799c37 is the first commit that
+    # exports that target; anything older fails interception_guidance's build. Move
+    # the two pins together.
   ros2_ws/src/trajectory_prediction:
     type: git
     url: https://github.com/mzahana/trajectory_prediction.git
@@ -99,10 +103,10 @@ repositories:
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
-    version: main
-    # NOTE: not pinned, and NOT PRESENT on the vehicle as of 2026-09-09 -- the
-    # board cannot fly an engagement until this is imported. Pin it to the
-    # commit that is flown as soon as one has been flown.
+    version: cba3f02cf5dcaf5b79929b0c02f6edf11e73bf29
+    # Read off the vehicle on 2026-09-19 (deployed and built there; the guidance
+    # field flight is still pending). Builds only against trajectory_generation
+    # >= f799c37 -- see the note on that entry.
 
 # --- deliberately NOT in this manifest ------------------------------------
 #
