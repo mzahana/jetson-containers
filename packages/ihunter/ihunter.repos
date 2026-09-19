@@ -14,7 +14,8 @@
 # something flies differently. To move a package forward: check out the new
 # commit, test it, then update the SHA here in a commit of its own.
 #
-# SHAs below are the state flown on 2026-09-09 (read off the vehicle).
+# SHAs below were read off the vehicle: originally the state flown on
+# 2026-09-09, last reconciled against the vehicle on 2026-09-19.
 #
 # BUMPING A PIN IS PART OF DEPLOYING. When you deploy a new ihunter_system (or
 # any package) to the vehicle, update its SHA here in the same sitting --
@@ -41,7 +42,7 @@ repositories:
   ros2_ws/src/mav_controllers_ros:
     type: git
     url: https://github.com/mzahana/mav_controllers_ros.git
-    version: 46b9263fbed3d0d63447cc537013960124a75fd2
+    version: 4896f419747ed50ffca9d082d8a88d6b650a97b7
   ros2_ws/src/geo_tuner:
     type: git
     url: https://github.com/mzahana/geo_tuner.git
@@ -52,7 +53,7 @@ repositories:
   ros2_ws/src/mav_navigator_ros:
     type: git
     url: git@github.com:khaledgabr77/mav_navigator_ros.git
-    version: c458d972f8b71dbbf12664cbe7ed2afbd945fa34   # feature/production-navigator
+    version: f8de115558a527a7042c6ae0433678afc4edf57f   # feature/production-navigator
   ros2_ws/src/custom_trajectory_msgs:
     type: git
     url: https://github.com/mzahana/custom_trajectory_msgs.git
@@ -99,7 +100,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: 5d7f14073ad41bbdf2d1d7e80e4f9d1583d7c406
+    version: f33ef7b506419251d81053ed8533fd01cfd93d7d
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
