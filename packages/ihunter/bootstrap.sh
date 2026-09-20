@@ -65,8 +65,18 @@ ok "git + python3-yaml (vcstool is deliberately NOT required -- see import-works
 
 # --- 2. the workspace --------------------------------------------------------
 step "Importing the ROS 2 workspace"
+# These live OUTSIDE the container on purpose: container-local files are lost
+# when the container is recreated, and `ihunter-container up` recreates.
+#   mav_controllers_config  gain_saver's tuned gains
+#   ihunter_config          guidance_param_saver's <node>.override.yaml -- the
+#                           termination criteria and envelope saved from the
+#                           guidance panel. The saver creates this itself on its
+#                           first save; making it here means the directory (and
+#                           its ownership) exists before anyone flies, and that
+#                           `ihunter params` has somewhere to look on a board
+#                           that has never saved anything.
 mkdir -p "$SHARED/ros2_ws/src" "$SHARED/logs" "$SHARED/bags" "$SHARED/reports" \
-         "$SHARED/mav_controllers_config" "$SHARED/run"
+         "$SHARED/mav_controllers_config" "$SHARED/ihunter_config" "$SHARED/run"
 
 # Private repositories need a key. Say so plainly rather than letting vcs fail
 # fifteen times with the same message.

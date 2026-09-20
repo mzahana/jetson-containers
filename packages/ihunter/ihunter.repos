@@ -15,7 +15,7 @@
 # commit, test it, then update the SHA here in a commit of its own.
 #
 # SHAs below were read off the vehicle: originally the state flown on
-# 2026-09-09, last reconciled against the vehicle on 2026-09-19.
+# 2026-09-09, last reconciled against the vehicle on 2026-09-20.
 #
 # BUMPING A PIN IS PART OF DEPLOYING. When you deploy a new ihunter_system (or
 # any package) to the vehicle, update its SHA here in the same sitting --
@@ -104,10 +104,15 @@ repositories:
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
-    version: cba3f02cf5dcaf5b79929b0c02f6edf11e73bf29
-    # Read off the vehicle on 2026-09-19 (deployed and built there; the guidance
+    version: 8641d88feae9fe35c6c52065d24095f4f0ce9a70
+    # Read off the vehicle on 2026-09-20 (deployed and built there; the guidance
     # field flight is still pending). Builds only against trajectory_generation
-    # >= f799c37 -- see the note on that entry.
+    # >= f799c37 ON THE VEHICLE -- see the note on that entry. Since 8641d88 that
+    # dependency is optional rather than REQUIRED, so the package also configures
+    # on a machine with no MPC and no solver, building its RViz panels and
+    # virtual_target_node but not engagement_manager_node. That is what lets the
+    # operator laptop stage this package for its panels (install-laptop.sh);
+    # it does not weaken the pin pair here, where the vehicle needs the node.
 
 # --- deliberately NOT in this manifest ------------------------------------
 #
