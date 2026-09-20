@@ -42,7 +42,7 @@ repositories:
   ros2_ws/src/mav_controllers_ros:
     type: git
     url: https://github.com/mzahana/mav_controllers_ros.git
-    version: 4896f419747ed50ffca9d082d8a88d6b650a97b7
+    version: e8567a2cfb1c4ace7a085642cc8b4a4669623b25
   ros2_ws/src/geo_tuner:
     type: git
     url: https://github.com/mzahana/geo_tuner.git
@@ -100,7 +100,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: 4dc3ec7ec64f26ac1b35eba0cf5427b6c919a7b9
+    version: 5c578eaaf3b96e723358174878f639ec2367430b
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
