@@ -100,7 +100,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: f33ef7b506419251d81053ed8533fd01cfd93d7d
+    version: 4dc3ec7ec64f26ac1b35eba0cf5427b6c919a7b9
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
