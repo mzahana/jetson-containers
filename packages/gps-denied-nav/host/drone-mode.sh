@@ -29,10 +29,13 @@ running()      { [ -n "$(docker ps -q -f "name=^/$1$")" ]; }
 # is-enabled exits non-zero for "disabled" too, so judge by its output.
 unit_state()   { local s; s="$(systemctl is-enabled "$1" 2>/dev/null || true)"; echo "${s:-not-installed}"; }
 
-# A launch is active when <stack>-run status lists one.
+# A launch is active when <stack>-run status lists one. Captured first: piping
+# straight into `grep -q` lets grep exit early, the writer dies of SIGPIPE, and
+# under pipefail that reads as "a launch is running".
 launch_active() {
     [ -x "$BIN/$1-run" ] && running "$1" || return 1
-    ! "$BIN/$1-run" status 2>/dev/null | grep -q '^run: *nothing running'
+    local out; out="$("$BIN/$1-run" status 2>/dev/null || true)"
+    ! grep -q '^run: *nothing running' <<< "$out"
 }
 
 status() {
