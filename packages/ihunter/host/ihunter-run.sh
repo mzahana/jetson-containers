@@ -49,7 +49,10 @@ running_names() {
     for f in "$(run_dir)"/*.pid; do
         [ -e "$f" ] || continue
         n="$(basename "$f" .pid)"; p="$(pid_of "$n")"
-        alive "$p" && echo "$n"
+        # `if`, not `alive && echo`: with a stale pid file last in the glob, the
+        # && form makes this function return 1, and under pipefail + set -e the
+        # caller dies without a word -- `start` exited 1 silently (2026-10-08).
+        if alive "$p"; then echo "$n"; fi
     done
 }
 
