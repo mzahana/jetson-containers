@@ -15,7 +15,7 @@
 # commit, test it, then update the SHA here in a commit of its own.
 #
 # SHAs below were read off the vehicle: originally the state flown on
-# 2026-09-09, last reconciled against the vehicle on 2026-09-20.
+# 2026-09-09, last reconciled against the vehicle on 2026-10-08.
 #
 # BUMPING A PIN IS PART OF DEPLOYING. When you deploy a new ihunter_system (or
 # any package) to the vehicle, update its SHA here in the same sitting --
@@ -100,7 +100,7 @@ repositories:
   ros2_ws/src/ihunter_system:
     type: git
     url: git@github.com:mzahana/ihunter_system.git
-    version: 15bc35609b8d04e6e43997e1f8889fd431b4e0d6
+    version: 868b3facccd950c7664eed88773b8638d9270d22
   ros2_ws/src/interception_guidance:
     type: git
     url: git@github.com:mzahana/interception_guidance.git
