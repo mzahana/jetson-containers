@@ -1,0 +1,47 @@
+# The GPS-denied navigation ROS 2 workspace, exactly.
+#
+#   ./packages/gps-denied-nav/import-workspace.sh
+#
+# Same rules as packages/ihunter/ihunter.repos: EVERY ENTRY IS PINNED TO A
+# COMMIT, not a branch. To move a package forward: check out the new commit,
+# test it, then update the SHA here in a commit of its own.
+#
+# Public repositories only. No GitHub credential is placed on this board, so a
+# private entry here could never import. The vehicle package
+# gps_denied_navigation_system (private) reaches the board from the laptop with
+# `gpsdnav deploy --init` (git bundle over SSH) and is deliberately NOT listed;
+# import-workspace.sh still reports its SHA next to these.
+#
+# mavlink, mavros and siyi_msgs are the pins flying on iHunter (same board).
+
+repositories:
+
+  # --- the autopilot link -------------------------------------------------
+  ros2_ws/src/mavlink:
+    type: git
+    url: https://github.com/ros2-gbp/mavlink-gbp-release.git
+    version: bc5543fd574138d9e244a7f0600d7144fa537990   # release/humble/mavlink/2023.9.9-1
+  ros2_ws/src/mavros:
+    type: git
+    url: https://github.com/mzahana/mavros.git
+    version: 3b3804f6a73eee746d85798274238406c5e3f0a4   # ros2_humble
+
+  # --- the gimbal camera --------------------------------------------------
+  ros2_ws/src/siyi_msgs:
+    type: git
+    url: https://github.com/mzahana/siyi_msgs.git
+    version: 7ca05374739c830941c4e76651cfe61d2169910b
+  ros2_ws/src/siyi_ros2:
+    type: git
+    url: https://github.com/mzahana/siyi_ros2.git
+    version: 719a51fef38f3fb35d366084f73e9d0743a8d1b1   # main, 2026-08-17
+    # NOT iHunter's pin (9dda970). On 2026-10-08 iHunter's checkout was at
+    # 9dda970 plus uncommitted changes that are identical to 719a51f (gimbal
+    # JointState on /joint_states, gimbal_tf_bridge, URDF) except the README and
+    # a 1280x720 calibration, so 719a51f is the code this board has actually run
+    # since August. Its optional siyi_a8_tf.launch.py needs ros-humble-xacro,
+    # which the image does not have.
+
+  # --- later phases --------------------------------------------------------
+  # ros2_ws/src/tercom_nav: mzahana/tercom_nav@e072fed   (phase 9)
+  # ros2_ws/src/xv_geoloc_ros:                            (phase 9)
