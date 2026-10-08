@@ -39,8 +39,8 @@ repositories:
     # 9dda970 plus uncommitted changes that are identical to 719a51f (gimbal
     # JointState on /joint_states, gimbal_tf_bridge, URDF) except the README and
     # a 1280x720 calibration, so 719a51f is the code this board has actually run
-    # since August. Its optional siyi_a8_tf.launch.py needs ros-humble-xacro,
-    # which the image does not have.
+    # since August. Its siyi_a8_tf.launch.py needs ros-humble-xacro, which the
+    # gps-denied-nav image installs (iHunter's does not).
 
   # --- later phases --------------------------------------------------------
   # ros2_ws/src/tercom_nav: mzahana/tercom_nav@e072fed   (phase 9)

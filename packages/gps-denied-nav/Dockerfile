@@ -59,7 +59,8 @@ RUN apt update && apt install -y \
 
 # Install additional ROS2 packages
 # camera-calibration and image-view are for the SIYI A8 intrinsics calibration
-# (DEPLOYMENT_PLAN.md 10.1); camera-info-manager-py is used by siyi_camera_node.
+# (DEPLOYMENT_PLAN.md 10.1); camera-info-manager-py is used by siyi_camera_node;
+# xacro is a run dependency of siyi_ros2 (siyi_a8_tf.launch.py, gimbal URDF).
 RUN apt update && apt install -y --no-install-recommends \
     ros-${ROS_DISTRO}-launch-xml \
     ros-${ROS_DISTRO}-launch-yaml \
@@ -84,6 +85,7 @@ RUN apt update && apt install -y --no-install-recommends \
     ros-${ROS_DISTRO}-compressed-depth-image-transport \
     ros-${ROS_DISTRO}-rosbag2-storage-mcap \
     ros-${ROS_DISTRO}-topic-tools \
+    ros-${ROS_DISTRO}-xacro \
     ros-${ROS_DISTRO}-rmw-zenoh-cpp
 
 # Make sure python3 is available as python
