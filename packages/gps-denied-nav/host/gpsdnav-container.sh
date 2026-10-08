@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ihunter-container -- the ihunter container as a long-lived service.
+# gpsdnav-container -- the gpsdnav container as a long-lived service.
 #
 # Field operations plan, phase F0. The point of this script is that no
 # long-running flight process is ever parented by an SSH session: the container
@@ -15,40 +15,41 @@
 # are --detach, --no-rm, a restart policy, and a main process that stays up.
 #
 # Offline-safe: the image is named explicitly, so nothing contacts a registry.
-# `jetson-containers run ihunter` cannot be used in the field for exactly that
+# `jetson-containers run gps-denied-nav` cannot be used in the field for exactly that
 # reason -- its autotag step needs the network.
 #
-#   ihunter-container up         create if missing, start if stopped (idempotent)
-#   ihunter-container status     what is running, and what state it is in
-#   ihunter-container stop       stop the container (does not delete it)
-#   ihunter-container recreate   delete and re-create from the pinned flags
-#   ihunter-container shell      interactive shell inside it
+#   gpsdnav-container up         create if missing, start if stopped (idempotent)
+#   gpsdnav-container status     what is running, and what state it is in
+#   gpsdnav-container stop       stop the container (does not delete it)
+#   gpsdnav-container recreate   delete and re-create from the pinned flags
+#   gpsdnav-container shell      interactive shell inside it
 #
 set -euo pipefail
 
 # --- configuration -----------------------------------------------------------
-# Overridable from /etc/ihunter.env so a second airframe needs no edit here.
-[ -r /etc/ihunter.env ] && . /etc/ihunter.env
+# Overridable from /etc/gpsdnav.env so a second airframe needs no edit here.
+[ -r /etc/gpsdnav.env ] && . /etc/gpsdnav.env
 
-CONTAINER_NAME="${IHUNTER_CONTAINER:-ihunter}"
-IMAGE="${IHUNTER_IMAGE:-ihunter_container:r36.5.tegra-aarch64-cu126-22.04-ihunter}"
+CONTAINER_NAME="${GPSDNAV_CONTAINER:-gpsdnav}"
+IMAGE="${GPSDNAV_IMAGE:-gpsdnav:r36.5.tegra-aarch64-cu126-22.04}"
 # systemd runs this as root, so $HOME is /root -- the owning user is explicit.
-OWNER="${IHUNTER_USER:-nvidia}"
-SHARED_VOLUME="${IHUNTER_SHARED_VOLUME:-/home/$OWNER/${CONTAINER_NAME}_shared_volume}"
-RESTART_POLICY="${IHUNTER_RESTART_POLICY:-unless-stopped}"
+OWNER="${GPSDNAV_USER:-nvidia}"
+SHARED_VOLUME="${GPSDNAV_SHARED_VOLUME:-/home/$OWNER/${CONTAINER_NAME}_shared_volume}"
+RESTART_POLICY="${GPSDNAV_RESTART_POLICY:-unless-stopped}"
 # Free space below this refuses container creation: a full disk on this board
-# has ended a session before (~9 GB free of 116 GB is the standing state).
-MIN_FREE_GB="${IHUNTER_MIN_FREE_GB:-3}"
-# The board is shared with gpsdnav. Both routers bind tcp/0.0.0.0:7447 and both
+# has ended a session before. Higher than iHunter's 3: bags with images run
+# at about 5 GB/h (DEPLOYMENT_PLAN.md 9).
+MIN_FREE_GB="${GPSDNAV_MIN_FREE_GB:-10}"
+# The board is shared with iHunter. Both routers bind tcp/0.0.0.0:7447 and both
 # MAVROS instances would open /dev/ttyUSB0, so only one stack may be up at a
-# time; switch with `sudo drone-mode <stack>` (packages/gps-denied-nav/host).
-EXCLUSIVE_WITH="${IHUNTER_EXCLUSIVE_WITH:-gpsdnav}"
+# time; switch with `sudo drone-mode <stack>` (DEPLOYMENT_PLAN.md 7).
+EXCLUSIVE_WITH="${GPSDNAV_EXCLUSIVE_WITH:-ihunter}"
 
 HERE="$(dirname "$(readlink -f "$0")")"
-# host/ -> ihunter/ -> packages/ -> repo root
-JC_ROOT="${IHUNTER_JC_ROOT:-$(readlink -f "$HERE/../../..")}"
+# host/ -> gps-denied-nav/ -> packages/ -> repo root
+JC_ROOT="${GPSDNAV_JC_ROOT:-$(readlink -f "$HERE/../../..")}"
 
-die() { echo "ihunter-container: $*" >&2; exit 1; }
+die() { echo "gpsdnav-container: $*" >&2; exit 1; }
 say() { echo "### $*"; }
 
 exists()  { [ -n "$(docker ps -aq -f "name=^/${CONTAINER_NAME}$")" ]; }
@@ -119,7 +120,7 @@ preflight() {
     [ -x "$JC_ROOT/run.sh" ] || die "jetson-containers run.sh not found at $JC_ROOT"
     docker image inspect "$IMAGE" >/dev/null 2>&1 \
         || die "image $IMAGE is not present locally. Build it at a desk with
-       packages/ihunter/build.sh -- there is no registry pull in this path."
+       packages/gps-denied-nav/build.sh -- there is no registry pull in this path."
 }
 
 create() {
@@ -131,8 +132,8 @@ create() {
     [ "$free_gb" -ge "$MIN_FREE_GB" ] \
         || die "only ${free_gb}G free on / (need ${MIN_FREE_GB}G). Sweep bags before flying."
 
-    mkdir -p "$SHARED_VOLUME"/{logs,bags,reports}
-    chown -R "$OWNER:$OWNER" "$SHARED_VOLUME"/{logs,bags,reports} 2>/dev/null || true
+    mkdir -p "$SHARED_VOLUME"/{logs,bags,run,calib}
+    chown -R "$OWNER:$OWNER" "$SHARED_VOLUME"/{logs,bags,run,calib} 2>/dev/null || true
 
     # Same hardware mounts packages/ihunter/run.sh applies, and for the same
     # reason: mount only what this board actually has.
@@ -217,5 +218,5 @@ case "${1:-up}" in
     recreate) preflight; say "Removing $CONTAINER_NAME"; docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true; create ;;
     shell)    exec docker exec -it "$CONTAINER_NAME" bash ;;
     status)   status ;;
-    *)        die "usage: ihunter-container {up|create|start|stop|recreate|shell|status}" ;;
+    *)        die "usage: gpsdnav-container {up|create|start|stop|recreate|shell|status}" ;;
 esac

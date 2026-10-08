@@ -1,0 +1,18 @@
+[Unit]
+Description=gpsdnav zenoh router (rmw_zenohd)
+Requires=gpsdnav-container.service
+After=gpsdnav-container.service
+# The router is meaningless without the container, and must go down with it.
+BindsTo=gpsdnav-container.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/gpsdnav-router
+# Killing a `docker exec` client does not kill the process it started inside the
+# container, so stopping this unit must reach in and stop the router explicitly.
+ExecStop=-/usr/bin/docker exec gpsdnav pkill -x rmw_zenohd
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

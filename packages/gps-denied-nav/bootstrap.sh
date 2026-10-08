@@ -123,10 +123,12 @@ if [ ! -x "$HERE/host/install.sh" ]; then
     warn "host/install.sh is not in this checkout yet; the container will not
        start at boot until the host services are installed."
 elif [ "$(id -u)" -eq 0 ]; then
-    "$HERE/host/install.sh" --enable
+    "$HERE/host/install.sh"
 else
-    sudo "$HERE/host/install.sh" --enable
+    sudo "$HERE/host/install.sh"
 fi
+# Installed, NOT enabled: this board is shared with iHunter, and enabling
+# gpsdnav disables iHunter at boot. That is a decision for `drone-mode`.
 
 step "Done"
 if [ "$HAVE_VEHICLE_PKG" = 0 ]; then
@@ -145,8 +147,11 @@ DONE
 else
     cat <<DONE
 
-  The container starts at boot with the zenoh router supervised. Reboot once
-  and confirm nothing needed a human:
+  To make this board boot into gpsdnav (disables iHunter at boot):
+
+      sudo drone-mode gpsdnav
+
+  Then reboot once and confirm nothing needed a human:
 
       sudo reboot
       # then, from the laptop:
