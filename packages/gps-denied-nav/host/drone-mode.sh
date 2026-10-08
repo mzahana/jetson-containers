@@ -26,7 +26,8 @@ say() { echo "### $*"; }
 
 installed()    { [ -f "$UNITS/$1-container.service" ]; }
 running()      { [ -n "$(docker ps -q -f "name=^/$1$")" ]; }
-unit_state()   { systemctl is-enabled "$1" 2>/dev/null || echo "not-installed"; }
+# is-enabled exits non-zero for "disabled" too, so judge by its output.
+unit_state()   { local s; s="$(systemctl is-enabled "$1" 2>/dev/null || true)"; echo "${s:-not-installed}"; }
 
 # A launch is active when <stack>-run status lists one.
 launch_active() {
