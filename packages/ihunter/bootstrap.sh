@@ -108,11 +108,22 @@ fi
 
 # --- 4. the workspace build --------------------------------------------------
 step "Building the workspace inside the container"
+# This build runs in a throwaway container, so NOTHING may be installed into it:
+# whatever rosdep installs here is linked by the build and then missing at run
+# time. Found with the gps-denied-nav stack on 2026-10-08 -- rosdep installed
+# Ubuntu's libgeographic-dev, mavros linked libGeographic.so.19, and mavros_node
+# could not start in the service container. Every run-time dependency belongs in
+# the Dockerfile, so rosdep only REPORTS what it would install. GeographicLib is
+# skipped: the image builds it from source into /usr/local on purpose. The braces
+# also stop a failed source/cd from falling through the old `|| true`.
+ROSDEP_SKIP="geographiclib geographiclib-tools libgeographic-dev"
 docker run --rm --runtime nvidia --network host --shm-size=8g \
     -v "$SHARED:/root/shared_volume" "$IMAGE" \
     bash -lc "source /opt/ros/${ROS_DISTRO_NAME}/setup.bash \
               && cd /root/shared_volume/ros2_ws \
-              && rosdep install --from-paths src --ignore-src -r -y 2>/dev/null || true \
+              && { missing=\$(rosdep install --simulate --from-paths src --ignore-src -r \
+                       --skip-keys '$ROSDEP_SKIP' 2>/dev/null | grep -E 'apt-get|pip' || true); \
+                   [ -z \"\$missing\" ] || printf '  warn image lacks run-time deps; add them to the Dockerfile:\n%s\n' \"\$missing\"; } \
               && colcon build --symlink-install --packages-up-to mavros_msgs \
               && colcon build --symlink-install"
 ok "workspace built"
