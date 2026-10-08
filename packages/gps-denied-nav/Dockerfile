@@ -1,10 +1,12 @@
 #---
 # name: gps-denied-nav
-# depends: [opencv, cudastack, torchvision]
+# depends: [opencv, cudastack, torchvision, gstreamer]
 # requires: '>=36'
 # config: config.py
 #---
-#  [opencv, cudastack, torchvision, onnxruntime]
+# The depends list must stay identical to packages/ihunter so the resolved
+# chain tip is the same ihunter_container:*-gstreamer stage. build.sh then
+# builds only this one layer on top of it (see DEPLOYMENT_PLAN.md D2).
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
 
@@ -34,7 +36,7 @@ RUN apt update && apt install -y \
 RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(. /etc/os-release && echo $UBUNTU_CODENAME) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
 
-# Install ROS2 Desktop (continue on error if OpenCV packages fail)
+# Install ROS2 Desktop
 RUN apt update && \
     apt install -y --no-install-recommends ros-${ROS_DISTRO}-desktop
 
@@ -55,8 +57,10 @@ RUN apt update && apt install -y \
     libtinyxml2-dev \
     libcunit1-dev
 
-# Install additional ROS2 packages 
-RUN apt install -y --no-install-recommends \
+# Install additional ROS2 packages
+# camera-calibration and image-view are for the SIYI A8 intrinsics calibration
+# (DEPLOYMENT_PLAN.md 10.1); camera-info-manager-py is used by siyi_camera_node.
+RUN apt update && apt install -y --no-install-recommends \
     ros-${ROS_DISTRO}-launch-xml \
     ros-${ROS_DISTRO}-launch-yaml \
     ros-${ROS_DISTRO}-launch-testing \
@@ -64,14 +68,17 @@ RUN apt install -y --no-install-recommends \
     ros-${ROS_DISTRO}-demo-nodes-cpp \
     ros-${ROS_DISTRO}-demo-nodes-py \
     ros-${ROS_DISTRO}-example-interfaces \
+    ros-${ROS_DISTRO}-camera-calibration \
     ros-${ROS_DISTRO}-camera-calibration-parsers \
     ros-${ROS_DISTRO}-camera-info-manager \
+    ros-${ROS_DISTRO}-camera-info-manager-py \
     ros-${ROS_DISTRO}-cv-bridge \
     ros-${ROS_DISTRO}-v4l2-camera \
     ros-${ROS_DISTRO}-vision-opencv \
     ros-${ROS_DISTRO}-vision-msgs \
     ros-${ROS_DISTRO}-image-geometry \
     ros-${ROS_DISTRO}-image-pipeline \
+    ros-${ROS_DISTRO}-image-view \
     ros-${ROS_DISTRO}-image-transport \
     ros-${ROS_DISTRO}-compressed-image-transport \
     ros-${ROS_DISTRO}-compressed-depth-image-transport \
@@ -92,34 +99,85 @@ RUN apt update \
 # Install pip packages manually for TensorRT compatibility https://github.com/NVIDIA/TensorRT/issues/2567
 RUN python3 -m pip install --upgrade pip wheel
 
-# Install onnxslim==0.1.34. Needed in "yolo export"
-RUN pip install "onnxslim==0.1.34"
 RUN pip3 install transforms3d
-RUN pip install colorama
 RUN pip3 install numpy scipy rasterio pyproj pandas matplotlib
+# mcap readers, for inspecting bags inside the container
+RUN pip3 install mcap mcap-ros2-support
+# Pin NumPy <2 so ROS Humble cv_bridge (compiled against NumPy 1.x) does not hit
+# the _ARRAY_API ABI mismatch error at import time.
+RUN pip3 install "numpy==1.26.4"
+
 #
-# MAVROS dependencies
+# MAVROS dependencies (MAVROS itself is built from source in the shared-volume
+# workspace, see gpsdnav.repos)
 #
-RUN  apt update && \
+# Install packages available from reachable repos (ROS apt server)
+RUN apt update && \
     apt install -y \
         python3-vcstool \
         python3-rosinstall-generator \
         python3-osrf-pycommon \
-        geographiclib-tools \
-        libgeographic-dev \
-		libasio-dev \
-		libgoogle-glog-dev \
-		ros-${ROS_DISTRO}-eigen-stl-containers \
-		ros-${ROS_DISTRO}-diagnostic-updater \
-		ros-${ROS_DISTRO}-geographic-msgs \
-		&& apt-get clean autoclean \
-	&& rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+        libasio-dev \
+        ros-${ROS_DISTRO}-eigen-stl-containers \
+        ros-${ROS_DISTRO}-diagnostic-updater \
+        ros-${ROS_DISTRO}-geographic-msgs \
+        python3-click \
+        python3-colorama \
+        python3-future \
+    && apt-get clean autoclean \
+    && rm -rf /var/lib/apt/lists/{apt,dpkg,cache,log} /tmp/* /var/tmp/*
+
+# Build gflags from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v2.2.2 --depth 1 https://github.com/gflags/gflags.git && \
+    cd gflags && mkdir build && cd build && \
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/gflags
+
+# Build glog from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v0.6.0 --depth 1 https://github.com/google/glog.git && \
+    cd glog && mkdir build && cd build && \
+    cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/glog
+
+# Build GeographicLib from source (ports.ubuntu.com blocked on this network)
+RUN cd /tmp && \
+    git clone -b v2.3 --depth 1 https://github.com/geographiclib/geographiclib.git && \
+    cd geographiclib && mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release .. && \
+    make -j$(nproc) && make install && \
+    ldconfig && \
+    cd / && rm -rf /tmp/geographiclib
 RUN  geographiclib-get-geoids egm96-5 && \
     geographiclib-get-gravity egm96 && \
     geographiclib-get-magnetic emm2015
-RUN pip3 install future catkin_pkg pyyaml lxml
+RUN pip3 install catkin_pkg pyyaml lxml
 RUN pip3 install empy==3.3.4
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
+# Install SIYI SDK dependencies (avoiding opencv-python to use jetson-containers opencv)
+RUN pip3 install "structlog>=24.0" "pyserial-asyncio>=0.6" "typing-extensions>=4.10"
+
+# Install optional SIYI SDK dependencies and Web UI dependencies
+# PyGObject is provided by python3-gi which is installed by the gstreamer package in jetson-containers
+RUN pip3 install "aiortsp>=1.2" "av>=12.0" "fastapi>=0.110" "uvicorn[standard]>=0.29" "pydantic>=2.7"
+
+# Final NumPy pin: defeat any transitive upgrade pulled in by later pip installs.
+RUN pip3 install --force-reinstall --no-deps "numpy==1.26.4"
+
+RUN echo "Busting cache for SDK update: siyi_sdk 15b60b8 (siyi-sdk-v2) 2026-10-08"
+# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV).
+RUN cd /tmp && \
+    git clone -b siyi-sdk-v2 https://github.com/mzahana/siyi_sdk.git && \
+    cd siyi_sdk && \
+    pip3 install --no-deps . && \
+    cd / && \
+    rm -rf /tmp/siyi_sdk
 
 # Set up environment variables
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
