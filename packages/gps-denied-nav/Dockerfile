@@ -172,14 +172,24 @@ RUN pip3 install "aiortsp>=1.2" "av>=12.0" "fastapi>=0.110" "uvicorn[standard]>=
 # Final NumPy pin: defeat any transitive upgrade pulled in by later pip installs.
 RUN pip3 install --force-reinstall --no-deps "numpy==1.26.4"
 
-RUN echo "Busting cache for SDK update: siyi_sdk 15b60b8 (siyi-sdk-v2) 2026-10-08"
-# Clone and install SIYI SDK from GitHub (without its own pip dependencies to avoid overriding OpenCV).
+# SIYI SDK, pinned by commit (branch siyi-sdk-v2), without its own pip
+# dependencies to avoid overriding OpenCV. The pin is the only way the SDK in
+# the image changes: a rebuild never picks up a newer branch tip by itself, and
+# changing SIYI_SDK_REF is what invalidates this layer (no cache-bust line).
+# The ENV carries it into every container, where flight_meta.py writes it into
+# each bag's flight_meta.txt; the pip version alone (0.6.0) does not tell two
+# builds apart.
+#   045f7a7  one_key_centering() defaults to code 1 (code 3 does not level an A8 mini)
+ARG SIYI_SDK_REF=045f7a753b757dce2af5fe22be884cf5cd63a7b9
 RUN cd /tmp && \
     git clone -b siyi-sdk-v2 https://github.com/mzahana/siyi_sdk.git && \
     cd siyi_sdk && \
+    git checkout --detach ${SIYI_SDK_REF} && \
+    test "$(git rev-parse HEAD)" = "${SIYI_SDK_REF}" && \
     pip3 install --no-deps . && \
     cd / && \
     rm -rf /tmp/siyi_sdk
+ENV SIYI_SDK_REF=${SIYI_SDK_REF}
 
 # Set up environment variables
 RUN echo "source /opt/ros/${ROS_DISTRO}/setup.bash" >> ~/.bashrc
