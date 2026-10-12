@@ -19,8 +19,10 @@ BIN=/usr/local/bin
 UNITS=/etc/systemd/system
 
 if [ "${1:-}" = "--uninstall" ]; then
-    systemctl disable --now gpsdnav-router.service gpsdnav-container.service 2>/dev/null || true
-    rm -f "$UNITS/gpsdnav-router.service" "$UNITS/gpsdnav-container.service"
+    systemctl disable --now gpsdnav-autostart.service gpsdnav-router.service \
+        gpsdnav-container.service 2>/dev/null || true
+    rm -f "$UNITS/gpsdnav-router.service" "$UNITS/gpsdnav-container.service" \
+        "$UNITS/gpsdnav-autostart.service"
     rm -f "$BIN/gpsdnav-container" "$BIN/gpsdnav-router" "$BIN/gpsdnav-run" "$BIN/drone-mode"
     systemctl daemon-reload
     echo "removed. The container itself was left alone."
@@ -59,8 +61,13 @@ fi
 
 install -m 0644 "$HERE/gpsdnav-container.service" "$UNITS/"
 install -m 0644 "$HERE/gpsdnav-router.service"    "$UNITS/"
+install -m 0644 "$HERE/gpsdnav-autostart.service" "$UNITS/"
 systemctl daemon-reload
-echo "installed: gpsdnav-container, gpsdnav-router, gpsdnav-run, drone-mode"
+echo "installed: gpsdnav-container, gpsdnav-router, gpsdnav-autostart, gpsdnav-run, drone-mode"
+# A board already in gpsdnav mode gets the new unit enabled with the others.
+if [ "$(systemctl is-enabled gpsdnav-container.service 2>/dev/null)" = enabled ]; then
+    systemctl enable gpsdnav-autostart.service
+fi
 
 if [ "${1:-}" = "--enable" ]; then
     "$BIN/drone-mode" gpsdnav

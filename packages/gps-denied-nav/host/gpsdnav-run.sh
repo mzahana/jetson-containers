@@ -12,6 +12,15 @@
 #   gpsdnav-run status             what is running, its log, its bag
 #   gpsdnav-run logs [name] [-f]   the launch's console output
 #   gpsdnav-run prune              delete logs older than GPSDNAV_LOG_DAYS
+#   gpsdnav-run standby            start the RC standby now (see below)
+#   gpsdnav-run autostart          the same, only if `gpsdnav rc on` set it; run
+#                                  at boot by gpsdnav-autostart.service
+#
+# The RC standby is the survey stack (MAVROS + camera) with no bag, plus
+# rc_trigger.py, which records from a switch on the pilot's transmitter and
+# beeps the result on the autopilot's buzzer. Its settings are in
+# <shared volume>/config/rc_trigger.env, written by `gpsdnav rc` on the laptop
+# (no sudo needed). Off unless that file says RC_AUTOSTART=1.
 #
 set -euo pipefail
 [ -r /etc/gpsdnav.env ] && . /etc/gpsdnav.env
@@ -117,6 +126,45 @@ start() {
     exit 1
 }
 
+# --- RC standby --------------------------------------------------------------
+RC_RUN=rc_standby
+rc_conf() { echo "$HOST_SHARED/config/rc_trigger.env"; }
+
+# One KEY=value from the settings file, or the default. Parsed, never sourced:
+# this runs as root at boot, and the file is the laptop's to write.
+rc_get() {
+    local v=""
+    [ -r "$(rc_conf)" ] && v="$(sed -n "s/^$1=//p" "$(rc_conf)" | tail -1)"
+    v="${v#\'}"; v="${v%\'}"; v="${v#\"}"; v="${v%\"}"
+    echo "${v:-$2}"
+}
+
+standby() {
+    local channel args
+    channel="$(rc_get RC_CHANNEL 9)"
+    [[ "$channel" =~ ^[0-9]+$ ]] && [ "$channel" -ge 1 ] && [ "$channel" -le 18 ] \
+        || die "RC_CHANNEL '$channel' in $(rc_conf) is not 1..18"
+    args="$(rc_get RC_ARGS '')"
+    # shellcheck disable=SC2086 -- RC_ARGS is a list of key:=value words
+    start "$RC_RUN" gps_denied_navigation_system survey.launch.py \
+        record:=false rc_trigger:=true "rc_channel:=$channel" $args
+}
+
+# At boot the autopilot can come up after the Jetson, and a missing serial
+# device fails the launch: retry for about a minute before giving up.
+autostart() {
+    [ "$(rc_get RC_AUTOSTART 0)" = 1 ] \
+        || { say "RC standby is off (gpsdnav rc on to enable)"; return 0; }
+    local i
+    for i in 1 2 3 4 5 6; do
+        ( standby ) && return 0
+        [ -z "$(running_names)" ] || { say "something else is running; RC standby not started"; return 0; }
+        say "RC standby did not start (attempt $i); retrying in 10 s"
+        sleep 10
+    done
+    die "RC standby did not start; see the logs in $HOST_SHARED/logs"
+}
+
 # --- stop --------------------------------------------------------------------
 stop_one() {
     local name="$1" p i
@@ -209,5 +257,7 @@ case "${1:-status}" in
     status) status ;;
     logs)   shift; logs "$@" ;;
     prune)  prune ;;
-    *)      die "usage: gpsdnav-run {start|stop|status|logs|prune}" ;;
+    standby)   standby ;;
+    autostart) autostart ;;
+    *)      die "usage: gpsdnav-run {start|stop|status|logs|prune|standby|autostart}" ;;
 esac

@@ -26,6 +26,8 @@ say() { echo "### $*"; }
 
 installed()    { [ -f "$UNITS/$1-container.service" ]; }
 running()      { [ -n "$(docker ps -q -f "name=^/$1$")" ]; }
+# A unit only some stacks have (gpsdnav-autostart): its name if installed, else nothing.
+optional_unit() { [ -f "$UNITS/$1" ] && echo "$1" || true; }
 # is-enabled exits non-zero for "disabled" too, so judge by its output.
 unit_state()   { local s; s="$(systemctl is-enabled "$1" 2>/dev/null || true)"; echo "${s:-not-installed}"; }
 
@@ -69,7 +71,8 @@ $("$BIN/$s-run" status 2>/dev/null | sed 's/^/       /')
         fi
         if installed "$s"; then
             say "disabling $s"
-            systemctl disable --now "$s-router.service" "$s-container.service" 2>/dev/null || true
+            systemctl disable --now $(optional_unit "$s-autostart.service") \
+                "$s-router.service" "$s-container.service" 2>/dev/null || true
         fi
         # A container started by hand is not stopped by its unit. `docker stop`
         # also marks it stopped for the unless-stopped policy, so it stays down
@@ -82,6 +85,10 @@ $("$BIN/$s-run" status 2>/dev/null | sed 's/^/       /')
 
     say "enabling $want"
     systemctl enable --now "$want-container.service" "$want-router.service"
+    # Enabled, not started: it is a boot-time hook, and a no-op unless the
+    # stack's own settings turn it on (gpsdnav: `gpsdnav rc on`).
+    local auto; auto="$(optional_unit "$want-autostart.service")"
+    [ -z "$auto" ] || systemctl enable "$auto"
     echo
     status
 }

@@ -1,0 +1,17 @@
+[Unit]
+Description=gpsdnav RC standby at boot (only if `gpsdnav rc on` enabled it)
+Documentation=https://github.com/mzahana/gps_denied_navigation_system/blob/main/docs/FIELD_OPERATIONS.md
+# Enabled together with the container and router by `drone-mode gpsdnav`, and
+# a no-op unless <shared volume>/config/rc_trigger.env says RC_AUTOSTART=1, so
+# turning the standby on or off from the laptop never needs sudo.
+Requires=gpsdnav-container.service
+After=gpsdnav-container.service gpsdnav-router.service
+
+[Service]
+Type=oneshot
+# The launch is handed to the container and this exits; up to six tries 10 s apart.
+TimeoutStartSec=300
+ExecStart=/usr/local/bin/gpsdnav-run autostart
+
+[Install]
+WantedBy=multi-user.target
