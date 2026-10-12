@@ -72,7 +72,9 @@ fi
 if [ "${1:-}" = "--enable" ]; then
     "$BIN/drone-mode" gpsdnav
 else
-    echo "not enabled. To hand the board to gpsdnav:  sudo drone-mode gpsdnav"
+    if [ "$(systemctl is-enabled gpsdnav-container.service 2>/dev/null)" != enabled ]; then
+        echo "not enabled. To hand the board to gpsdnav:  sudo drone-mode gpsdnav"
+    fi
     echo
     "$BIN/drone-mode" status
 fi
